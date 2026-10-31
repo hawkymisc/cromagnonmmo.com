@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: セキュリティの問題 / Security problem
+    url: https://github.com/yurinakanishi/cromagnonmmo.com/security/advisories/new
+    about: 公開のIssueではなく、非公開で知らせてください / Report it privately, not in a public issue

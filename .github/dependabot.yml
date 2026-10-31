@@ -1,0 +1,25 @@
+# Proposes updates for the pinned GitHub Actions and the pnpm dependencies, one grouped pull
+# request per ecosystem. CI checks every proposal; nothing merges on its own.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns: ['*']
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      npm:
+        patterns: ['*']
+    ignore:
+      # Patch releases only. Minor and major releases are updated by hand: TypeScript 7, for
+      # one, has no ts.sys, which scripts/build.mjs uses.
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      # scripts/prepare-motion-assets.mjs requires exactly this release.
+      - dependency-name: '@mediapipe/tasks-vision'

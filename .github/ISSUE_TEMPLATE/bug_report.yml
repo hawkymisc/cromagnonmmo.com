@@ -1,0 +1,64 @@
+name: 不具合の報告 / Bug report
+description: ゲームやコードの不具合を知らせる / Report a problem in the game or the code
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        報告ありがとうございます。セキュリティの問題はここに書かず、[SECURITY.md](https://github.com/yurinakanishi/cromagnonmmo.com/blob/main/SECURITY.md) の方法で知らせてください。
+        Thank you for the report. Please do not write security problems here; report them as described in [SECURITY.md](https://github.com/yurinakanishi/cromagnonmmo.com/blob/main/SECURITY.md).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 何が起きたか / What happened
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現の手順 / Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待した動き / What you expected
+  - type: dropdown
+    id: where
+    attributes:
+      label: どこで起きたか / Where it happened
+      options:
+        - 公開サイト（cromagnonmmo.com） / The public site (cromagnonmmo.com)
+        - 手元で動かしたもの（pnpm start・pnpm run dev） / A local run (pnpm start, pnpm run dev)
+        - ビルドやテスト / A build or the tests
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: ブラウザーと端末 / Browser and device
+      placeholder: Chrome 131 / Windows 11, Safari / iPhone 15
+    validations:
+      required: true
+  - type: textarea
+    id: errors
+    attributes:
+      label: 表示されたエラー / Errors shown
+      description: 画面やブラウザーのコンソールに出たもの / On the screen or in the browser console
+      render: text
+  - type: textarea
+    id: more
+    attributes:
+      label: そのほか / Anything else
+      description: スクリーンショットなど / Screenshots and so on
+  - type: checkboxes
+    id: conduct
+    attributes:
+      label: 行動規範 / Code of conduct
+      options:
+        - label: '[行動規範](https://github.com/yurinakanishi/cromagnonmmo.com/blob/main/CODE_OF_CONDUCT.md)を守ります / I will follow the [Code of conduct](https://github.com/yurinakanishi/cromagnonmmo.com/blob/main/CODE_OF_CONDUCT.md)'
+          required: true

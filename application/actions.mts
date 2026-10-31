@@ -1,0 +1,316 @@
+import { handleWarpAction } from '../shared/warping.mjs';
+import { handleCharacterSwitch } from '../shared/character-switching.mjs';
+import { switchCharacterById } from '../shared/character-switch.mjs';
+import { ALL_CONTENT, characterVisible } from '../shared/content-visibility.mjs';
+import { handleAdventureAction, recordAdventureGather } from '../shared/adventures.mjs';
+import { handleBoatAction } from '../shared/boats.mjs';
+import { craftInventory } from '../shared/inventory-crafting.mjs';
+import { equippedItem } from '../shared/equipment.mjs';
+import { equipItem } from '../shared/equipment-actions.mjs';
+import { attackProfile, shoulderMagic } from '../shared/combat-profiles.mjs';
+import { handleHuntingAction } from '../shared/hunting.mjs';
+import { gatherDistance, gatherRange, interactionVisible } from '../shared/interactions.mjs';
+import { handleRidingAction } from '../shared/riding.mjs';
+import { NPC } from '../shared/world.mjs';
+import { roomRules } from '../shared/room-rules.mjs';
+import { handleGulfAction, ensureGulfPlayer } from '../shared/gulf-life.mjs';
+import { handleFishingAction, cancelFishing } from '../shared/fishing.mjs';
+import { handleCoastalAction, cancelCoastal } from '../shared/coastal-craft.mjs';
+import { handleVillageAction } from '../shared/village-life.mjs';
+import { canStartJump, jumpProgress } from '../shared/jumping.mjs';
+import { cancelBarter } from '../shared/barter.mjs';
+import { carrying, handleCarryAction } from '../shared/carrying.mjs';
+import { toggleCaveFire } from '../shared/cave-fire.mjs';
+import { toggleCaveTorch } from '../shared/cave-light.mjs';
+import {
+  cancelMascotPets,
+  chooseMascot,
+  chooseMascots,
+  selectedMascotKeys,
+  petMascot,
+} from '../shared/mascot-selection.mjs';
+import { stopActor } from '../shared/combat.mjs';
+import { handleOrbBotAction, releaseHeldOrbBot } from '../shared/orb-bots.mjs';
+import { DYE_COOLDOWN_MS, normalizeDye } from '../shared/clothing-dye.mjs';
+const distance = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
+export function createActionHandler({
+  notice: sendNotice,
+  broadcast,
+  snapshot,
+  systemChat,
+  runtime,
+  visibility = ALL_CONTENT,
+  reply = (_player, _message) => {},
+}) {
+  // Unavailable world actions are quiet no-ops. Keep results and sound feedback on
+  // the wire, without interrupting play with proximity or busy-state instructions.
+  const notice = (player, text, tone = 'info', _popup = false) =>
+    sendNotice(player, text, tone, false);
+  return function act(room, player, message, now) {
+    const action = message.action;
+    // Retired commands from an older client must not consume items or emit a notice.
+    if (action === 'contribute') return;
+    if (action === 'equipItem') {
+      const result = equipItem(player, message.targetId, now);
+      if (result.ok) broadcast(room, snapshot(room, true));
+      reply(player, { type: 'equipmentResult', itemId: message.targetId, ...result });
+      return;
+    }
+    if (action === 'inventoryCraft') {
+      const result = craftInventory(room, player, message.targetId, now);
+      if (result.ok) broadcast(room, snapshot(room, true));
+      reply(player, { type: 'inventoryCraftResult', recipeId: message.targetId, ...result });
+      return;
+    }
+    if (['selectMascot', 'deselectMascot', 'selectAllMascots'].includes(action)) {
+      const selected = selectedMascotKeys(player);
+      const changed = room.multiMascots
+        ? chooseMascots(
+            room,
+            player,
+            action === 'selectAllMascots'
+              ? room.mascotKeys
+              : action === 'selectMascot'
+                ? [...selected, message.targetId ?? '']
+                : message.targetId
+                  ? selected.filter((key) => key !== message.targetId)
+                  : [],
+            now,
+          )
+        : action !== 'selectAllMascots' &&
+          chooseMascot(
+            room,
+            player,
+            action === 'selectMascot' ? (message.targetId ?? '') : null,
+            now,
+          );
+      if (changed) broadcast(room, snapshot(room));
+      return;
+    }
+    // One of the clothing dyes, or the character's own colours ('' or anything unknown).
+    if (action === 'dyeClothes') {
+      const dye = normalizeDye(message.targetId);
+      if (dye === (player.dye ?? null) || now - (player.lastDyeAt ?? -Infinity) < DYE_COOLDOWN_MS)
+        return;
+      player.lastDyeAt = now;
+      player.dye = dye;
+      broadcast(room, snapshot(room));
+      return;
+    }
+    if (action === 'toggleCaveTorch') {
+      if (toggleCaveTorch(player)) broadcast(room, snapshot(room));
+      return;
+    }
+    if (['throwBot', 'recallBots', 'cancelBotThrows'].includes(action)) {
+      // Calling one's companion ends one's own stroke of any companion.
+      if (action === 'recallBots') cancelMascotPets(room, player.id, now);
+      if (handleOrbBotAction(room, player, action, message.targetId, now))
+        broadcast(room, snapshot(room));
+      return;
+    }
+    // A held companion never occupies the hand during another action.
+    if (!['cancelCook', 'cancelFishing', 'cancelCoastal'].includes(action))
+      releaseHeldOrbBot(room, player, now);
+    // Anyone may pet any companion; it is happy, and stays with its own person.
+    if (action === 'petMascot') {
+      if (petMascot(room, player, message.targetId, now)) {
+        stopActor(player);
+        broadcast(room, snapshot(room));
+      }
+      return;
+    }
+    if (action === 'changeCharacter') {
+      const requested = switchCharacterById(message.targetId);
+      if (requested && !characterVisible(requested, visibility)) return;
+      const result = handleCharacterSwitch(room, player, message, now);
+      sendNotice(player, result.text, result.ok ? 'success' : 'error', true);
+      if (result.ok) {
+        delete player.unavailableCharacter;
+        broadcast(room, snapshot(room, true));
+      }
+      return;
+    }
+    if (action === 'warp') {
+      const result = handleWarpAction(room, player, message, now);
+      sendNotice(player, result.text, result.ok ? 'success' : 'error', true);
+      if (result.ok) broadcast(room, snapshot(room, true));
+      return;
+    }
+    const carry = handleCarryAction(room, player, message, now);
+    if (carry) {
+      if (carry.changed) {
+        // Neither party can keep a trade open while being picked up.
+        if (player.carrierId)
+          cancelBarter(room, player.carrierId, now, '肩に担いだので交換を中止しました。');
+        broadcast(room, snapshot(room));
+      }
+      if (carry.text) notice(player, carry.text, carry.tone, !carry.changed);
+      return;
+    }
+    if (carrying(player) && !(action === 'attack' && shoulderMagic(player))) {
+      if (['cancelCook', 'cancelFishing', 'cancelCoastal'].includes(action)) return;
+      return notice(player, '肩から降りてから行おう。R／△で降ろせます。');
+    }
+    if (action === 'jump') {
+      if (!canStartJump(player, now)) return;
+      cancelFishing(player);
+      cancelCoastal(player);
+      player.cookingEndsAt = 0;
+      player.jumpAt = now;
+      player.jumpSequence = (player.jumpSequence ?? 0) + 1;
+      broadcast(room, snapshot(room));
+      return;
+    }
+    if (jumpProgress(player, now) !== null) {
+      // Opening a menu sends these defensively. Jump already canceled all work.
+      if (['cancelFishing', 'cancelCoastal', 'cancelCook'].includes(action)) return;
+      return notice(player, '着地してから行おう。');
+    }
+    if (['attack', 'boardBoat', 'ride'].includes(action)) {
+      cancelFishing(player);
+      cancelCoastal(player);
+    }
+    const coastal = handleCoastalAction(room, player, message, now);
+    if (coastal) {
+      if (coastal.text) notice(player, coastal.text, coastal.tone, !coastal.changed);
+      if (coastal.changed) broadcast(room, snapshot(room, true));
+      return;
+    }
+    if (player.coastalActivity && action !== 'cancelFishing')
+      return notice(player, '作業中です。先にE／×で中止しよう。');
+    const fishing = handleFishingAction(room, player, message, now);
+    if (fishing) {
+      if (fishing.text) notice(player, fishing.text, fishing.tone, !fishing.changed);
+      if (fishing.changed) broadcast(room, snapshot(room, true));
+      return;
+    }
+    if (player.fishing) return notice(player, '魚を待っています。先にE／×で中止しよう。');
+    const boating = handleBoatAction(room, player, message, now);
+    if (boating) {
+      notice(player, boating.text, boating.tone, !boating.changed);
+      if (boating.changed) broadcast(room, snapshot(room, true));
+      return;
+    }
+    if (player.boatId) return notice(player, '乗船中です。岸で B を押して降りてから行おう。');
+    const riding = handleRidingAction(room, player, message, now);
+    if (riding) {
+      notice(player, riding.text, riding.tone, !riding.changed);
+      if (riding.changed) broadcast(room, snapshot(room));
+      return;
+    }
+    if (player.mountId) return notice(player, '騎乗中です。攻撃・採集・食事は R で降りてから。');
+    const hunting = handleHuntingAction(room, player, message, now);
+    if (hunting) {
+      notice(player, hunting.text, hunting.tone, action !== 'attack' && !hunting.changed);
+      if (hunting.changed) broadcast(room, snapshot(room));
+      return;
+    }
+    if (player.cookingEndsAt) return notice(player, '調理中です。先に調理を終えるか中止しよう。');
+    if (player.attackSequence && now - player.attackAt < attackProfile(player).durationMs)
+      return notice(player, '攻撃が終わってから行おう。');
+    if (action === 'toggleCaveFire') {
+      if (toggleCaveFire(room, player)) broadcast(room, snapshot(room, true));
+      return;
+    }
+    const village = handleVillageAction(room, player, message, now);
+    if (village) {
+      notice(player, village.text, village.ok ? 'success' : 'info');
+      if (village.ok) broadcast(room, snapshot(room));
+      return;
+    }
+    const gulf = handleGulfAction(room, player, message, now);
+    if (gulf) {
+      notice(player, gulf.text, gulf.ok ? 'success' : 'info');
+      if (gulf.ok) broadcast(room, snapshot(room, true));
+      return;
+    }
+    const adventure = handleAdventureAction(room, player, message, now);
+    if (adventure) {
+      notice(player, adventure.text, adventure.ok ? 'success' : 'info');
+      if (adventure.ok) broadcast(room, snapshot(room, true));
+      return;
+    }
+    if (action === 'gather') {
+      const candidates = room.resources.filter(
+        (resource) =>
+          resource.amount > 0 &&
+          (!message.targetId || resource.id === message.targetId) &&
+          gatherDistance(room.collision, player, resource) <= gatherRange(player) &&
+          interactionVisible(room.collision, player, resource),
+      );
+      const nearest = candidates
+        .filter((resource) => player.inventory[resource.type] < 99)
+        .sort(
+          (a, b) =>
+            gatherDistance(room.collision, player, a) - gatherDistance(room.collision, player, b),
+        )[0];
+      if (!nearest)
+        return notice(
+          player,
+          candidates.length
+            ? '持ち物がいっぱいです。'
+            : '資源に近づいてから採集しよう。遮られている場合は回り込もう。',
+          'error',
+        );
+      const amount = Math.min(
+        nearest.amount,
+        equippedItem(player) === 'axe' && nearest.type !== 'berry' ? 2 : 1,
+      );
+      if (player.inventory[nearest.type] >= 99)
+        return notice(player, '持ち物がいっぱいです。', 'error');
+      const collected = Math.min(amount, 99 - player.inventory[nearest.type]);
+      nearest.amount -= collected;
+      nearest.regeneratedAt = runtime.now();
+      player.inventory[nearest.type] += collected;
+      player.gathered = (player.gathered ?? 0) + collected;
+      recordAdventureGather(player, nearest, collected);
+      if (nearest.type === 'obsidian') ensureGulfPlayer(player).procured += collected;
+      if (!roomRules(room).freeActions) player.energy = Math.max(0, player.energy - 3);
+      const label = { wood: '木材', stone: '石', berry: 'ベリー', obsidian: '黒曜石' }[
+        nearest.type
+      ];
+      notice(player, `${label} +${collected}`, 'success');
+    } else if (action === 'craft') {
+      if (player.tool) return notice(player, 'すでに石斧を持っています。');
+      if (player.inventory.wood < 3 || player.inventory.stone < 2)
+        return notice(player, '石斧には木材 3・石 2 が必要です。', 'error');
+      player.inventory.wood -= 3;
+      player.inventory.stone -= 2;
+      player.equippedItem = equippedItem(player);
+      player.tool = true;
+      notice(
+        player,
+        '石斧を持ち物に追加しました。装備すると木材と石を一度に2つ採集できます。',
+        'success',
+      );
+    } else if (action === 'trade') {
+      if (!NPC) return notice(player, 'この交易は現在利用できません。', 'error');
+      if (distance(player, NPC) > 10)
+        return notice(player, 'オルに近づいて話しかけよう。', 'error');
+      if (!interactionVisible(room.collision, player, NPC))
+        return notice(player, 'オルまでの間がふさがれています。回り込もう。', 'error');
+      const material =
+        player.inventory.wood >= 2 ? 'wood' : player.inventory.stone >= 2 ? 'stone' : null;
+      if (!material) return notice(player, 'オル「木か石を2つ、ベリー3つと交換しよう」');
+      if (player.inventory.berry > 96)
+        return notice(player, 'ベリーを食べてから交換しよう。', 'error');
+      player.inventory[material] -= 2;
+      player.inventory.berry += 3;
+      notice(
+        player,
+        `オルと${material === 'wood' ? '木材' : '石'}2つを交換した。ベリー +3`,
+        'success',
+      );
+    } else if (action === 'eat') {
+      if (!player.inventory.berry) return notice(player, 'ベリーを持っていません。', 'error');
+      if (player.energy >= 100) return notice(player, '元気いっぱいです。');
+      player.inventory.berry -= 1;
+      player.energy = Math.min(100, player.energy + 25);
+      notice(player, 'ベリーを食べた。元気 +25', 'success');
+    } else if (action === 'wave') {
+      broadcast(room, { type: 'emote', id: player.id, emote: 'wave', at: runtime.now() });
+      systemChat(room, `${player.name} が手を振った。`);
+    } else return;
+    broadcast(room, snapshot(room, true));
+  };
+}

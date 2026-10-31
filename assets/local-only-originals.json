@@ -1,0 +1,132 @@
+{
+  "localFiles": [
+    {
+      "path": "assets/camp-cave/jank0vic-r42/references/x-avatar-400x400.jpg",
+      "sha256": "f3bf812411300fd17c36c6a883ddea78ff547376b2684e5dc471411430ecb191"
+    },
+    {
+      "path": "assets/camp-cave/ryuichi-frieze-r38/reference-archived.jpg",
+      "sha256": "06cba8b57b036a3d1551a74c6be9748271ebdd702402dbf71f6adbfe9cbcc2e5"
+    },
+    {
+      "path": "assets/camp-cave/source/cat-reference-user.png",
+      "sha256": "e00722b68d4147b34e51937c2d1172458cae9e36113f6313a4f774a074384df6"
+    },
+    {
+      "path": "assets/camp-cave/source/character-524-reference-r06.png",
+      "sha256": "8231914f43d9e8454823a923c8004df44c0bad1ee1aec9e2f140493d5f2af273"
+    },
+    {
+      "path": "assets/camp-cave/source/character-524-reference-user.png",
+      "sha256": "8231914f43d9e8454823a923c8004df44c0bad1ee1aec9e2f140493d5f2af273"
+    },
+    {
+      "path": "assets/camp-cave/source/daredaro-reference-user.png",
+      "sha256": "857463e4e35ea8a8ee88c3d44190bf565ab3043087f7b71e4f0b46aa6cfad727"
+    },
+    {
+      "path": "assets/friend-mascots/fairy-mascot/source/x-avatar-400.jpg",
+      "sha256": "e335c9233279ca55af98f19c587b11c4fa42a63a8554476500b46cba65fab194"
+    },
+    {
+      "path": "assets/friend-mascots/howkey-flask/source/x-avatar-400.jpg",
+      "sha256": "a27a46d5762a7016b77b123330bfe889f6124f12d381de9f0abd484c174b148a"
+    },
+    {
+      "path": "assets/friend-mascots/nukonuko-mascot/source/x-avatar-400.jpg",
+      "sha256": "2e0ec5965551f51c87e86d6b4377893a48c8708121cbefcd9dad88a0ac047eff"
+    },
+    {
+      "path": "assets/friend-mascots/otani-mascot/source/x-avatar-400.jpg",
+      "sha256": "efc9b15431eb4c779a77563e5ec3d18ca11daa85fbb78c251c21a3e550c4daaa"
+    },
+    {
+      "path": "assets/friend-mascots/rei-mascot/source/user-reference-illustration.jpg",
+      "sha256": "56838811c150b8a802c87c90cc6aaa6608aed0368b5c0b024fd69a17fb65cfbb"
+    },
+    {
+      "path": "assets/friend-mascots/rei-mascot/source/user-reference-sheet.png",
+      "sha256": "18a81c2681b1f957156e274068e67be89c033b09de655da77d578ae5e09926c7"
+    },
+    {
+      "path": "assets/friend-mascots/rei-mascot/source/user-reference-sheet.webp",
+      "sha256": "2c5ffe3e35a4aa3c03532b8fb76de472d436478aae143f95d4c251fe3de8ebd8"
+    },
+    {
+      "path": "assets/friend-mascots/rei-mascot/source/x-avatar-400.jpg",
+      "sha256": "395074739f73bdb67b790da19bab5eb5f33a3c7379f6486b1625e124437b6e2e"
+    },
+    {
+      "path": "assets/friend-mascots/saber-mascot/source/user-reference.jpg",
+      "sha256": "8c0f23c3c1d9acdf60509fa0a8a38f8d95c4562522513389d90a52491634caf0"
+    },
+    {
+      "path": "assets/friend-mascots/saber-mascot/source/x-avatar-400.jpg",
+      "sha256": "a4670f6642501a377084303ca1b8c8653efad08cc052c5dadd2a296c07f9d188"
+    },
+    {
+      "path": "assets/friend-mascots/sagasa-mascot/source/user-reference.jpg",
+      "sha256": "851595b134cf1f1548da30b6614d8dd04a7c6882e53f36588e98b712ad5dbb76"
+    },
+    {
+      "path": "assets/friend-mascots/sagasa-mascot/source/x-avatar-400.jpg",
+      "sha256": "53bb5feffb1ead28f53838c0475e9ed9eb174acd9fef154793d841b33bd1dfb6"
+    },
+    {
+      "path": "assets/friend-mascots/urata-mascot/source/x-avatar-400.jpg",
+      "sha256": "d0550f5f9a9052523d73c17a2647e6af58dc724ced6d38a6bd83c1d483926d2a"
+    },
+    {
+      "path": "assets/howkey-scientist/source/user-reference-01.png",
+      "sha256": "a2505d35e691796d0172cfbc53f4405efd9d22944f2503154de4af203c75731c"
+    },
+    {
+      "path": "assets/howkey-scientist/source/user-reference-02.webp",
+      "sha256": "4522e9f4c5f8ce96a3f2cf0bac2cb6f7fdc176b24dcc788e6215983c4736d7b3"
+    },
+    {
+      "path": "assets/kohaku/source/kohaku-poses.jpg",
+      "sha256": "e2bf47e34d832f465415c327a4eb922506b3aed7bc36e2ae6328a1b1edfb75d6"
+    },
+    {
+      "path": "assets/mae/source/mae.jpg",
+      "sha256": "ed917b016d8aab12ccd7f7b1521f5d5e314a99d18f70de23ddd82cf1ce6d149a"
+    },
+    {
+      "path": "assets/maruimo-octopus/source/user-reference.png",
+      "sha256": "69fcad371823afb72eb8a15413ebf830387c636e3d7e260b24431c6d5ca49fa7"
+    },
+    {
+      "path": "assets/orb-bots/source/user-reference.png",
+      "sha256": "c26fcc4d555b7cf586249114fb0a118c82baade3c3836e3cd745babe2c076a40"
+    },
+    {
+      "path": "assets/rimo-neko/source/user-reference.jpg",
+      "sha256": "3a0ebdfadbb383d170318a0cd4d3cb9540ccb113822bc0a44836dfcaeeebdf41"
+    },
+    {
+      "path": "assets/shape-bots/source/user-reference.png",
+      "sha256": "9836ed1b161feba83535854a67235b74ceb1c4dbe26a2098e53a33559c69ad77"
+    },
+    {
+      "path": "assets/title-credits/20261015-companions-r01/inputs/524.png",
+      "sha256": "d445adaa10510e98db22a41508d739cbe2e8c4919398c0700d50e1169cad58bc"
+    },
+    {
+      "path": "assets/title-credits/20261015-companions-r01/inputs/cat.png",
+      "sha256": "da95c2287d8d7311cd15fb8ed55bfd10f92d3d4fe7c9f22741de43afefdfe1df"
+    },
+    {
+      "path": "assets/title-credits/20261016-original-four-r01/inputs/524.png",
+      "sha256": "d445adaa10510e98db22a41508d739cbe2e8c4919398c0700d50e1169cad58bc"
+    },
+    {
+      "path": "assets/title-credits/20261016-original-four-r01/inputs/cat.png",
+      "sha256": "da95c2287d8d7311cd15fb8ed55bfd10f92d3d4fe7c9f22741de43afefdfe1df"
+    },
+    {
+      "path": "assets/violet-behemoth/source/user-reference.png",
+      "sha256": "21ad640d7c0378f02c08c3ba4efdd0ace30ab9237881cd0e21bb5a6d28257004"
+    }
+  ]
+}

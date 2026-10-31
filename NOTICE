@@ -1,0 +1,66 @@
+CRO-MAGNON
+Copyright 2026 Yuri Nakanishi
+
+Everything in this repository is licensed under the Apache License, Version
+2.0 (see LICENSE): the program, the 3D models, images, audio and motion data,
+the documents and the production records. The only exceptions are these.
+
+1. Other people's characters and files showing them: 524 (R-524),
+   Rimo-neko (りもねこ, Limo), the nine Dots (based on OpenAI's Dots),
+   cave-mural characters and other third-party characters.
+   Files outside the Apache-2.0 license:
+   - public/models/yellow-524-mascot/
+   - public/models/rimo-neko/
+   - public/models/orb-bot-*/
+   - public/models/camp-cave/*-sprites-*.png and mural-atlas-*.png
+   - public/spawn/camp.jpg and public/spawn/cave.jpg
+   - public/title/cro-magnon-mmo-transparent.webp and
+     public/title/cro-magnon-mmo-og-*.jpg
+   The code and documents that name, place or animate these characters are
+   licensed; the characters themselves are not.
+
+2. The name and logo of the game. "CRO-MAGNON", "CRO-MAGNON MMO", the logo
+   images (public/title/cro-magnon-*) and the site icons (public/favicon.svg
+   and public/favicon.ico) are not licensed, and all rights to them are
+   reserved.
+
+3. Third-party materials, which keep their own owners and licenses: the
+   libraries, models, data and sounds listed in THIRD_PARTY_NOTICES.md
+   (including public/motion/hand_landmarker-float16-v1.task and
+   public/motion/MEDIAPIPE-LICENSE.txt), and the X, Instagram and Facebook
+   logos on the share buttons, which are trademarks of their owners.
+
+The 3D models that the author published on Meshmell (listed in
+docs/meshmell-upload.md) are also available there under the Creative
+Commons Attribution 4.0 International license (CC BY 4.0).
+
+---
+
+このリポジトリのものは、プログラム、3Dモデル・画像・音・動きのデータ、文書、
+制作の記録を含めて、すべて Apache License 2.0（LICENSE）で提供しています。
+例外は次の3つだけです。
+
+1. 他の人のキャラクターと、それが写っているファイル。524（R-524さん）、
+   りもねこ（りもさん）、Dots 9種類（OpenAIのDotsがもと）、壁画などの
+   キャラクターが対象です。次のファイルはApache-2.0の対象外です。
+   - public/models/yellow-524-mascot/
+   - public/models/rimo-neko/
+   - public/models/orb-bot-*/
+   - public/models/camp-cave/ の *-sprites-*.png・mural-atlas-*.png
+   - public/spawn/camp.jpg・public/spawn/cave.jpg
+   - public/title/cro-magnon-mmo-transparent.webp・
+     public/title/cro-magnon-mmo-og-*.jpg
+   これらのキャラクターの名前を使い、配置し、動かすプログラムと文書は対象ですが、
+   キャラクターそのものは対象外です。
+
+2. ゲームの名前とロゴ。「CRO-MAGNON」「CRO-MAGNON MMO」、ロゴの画像
+   （public/title/cro-magnon-*）とサイトのアイコン（public/favicon.svg・
+   public/favicon.ico）は対象外で、すべての権利を保持しています。
+
+3. 外部の素材。THIRD_PARTY_NOTICES.md に挙げたライブラリ・モデル・データ・音
+   （public/motion/hand_landmarker-float16-v1.task と
+   public/motion/MEDIAPIPE-LICENSE.txt を含む）、共有ボタンのX・Instagram・
+   Facebookのロゴ（各社の商標）は、それぞれの持ち主とライセンスに従います。
+
+作者がMeshmellで公開した3Dモデル（docs/meshmell-upload.md に一覧）は、Meshmellで
+クリエイティブ・コモンズ 表示 4.0 国際（CC BY 4.0）でも提供しています。

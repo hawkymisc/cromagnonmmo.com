@@ -1,0 +1,75 @@
+{
+  "name": "cro-magnon",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.26.0",
+  "description": "A prehistoric solo exploration game with browser autosave.",
+  "license": "Apache-2.0",
+  "scripts": {
+    "prepare:vendor": "node scripts/prepare-vendor.mjs",
+    "prestart": "node scripts/prepare-vendor.mjs && node scripts/build.mjs && node scripts/delivery/prepare-overlay.mjs",
+    "predev": "node scripts/prepare-vendor.mjs",
+    "start": "node server.mjs",
+    "dev": "node scripts/dev.mjs",
+    "predev:local": "node scripts/prepare-vendor.mjs",
+    "dev:local": "node scripts/dev.mjs --local",
+    "prestart:local": "node scripts/prepare-vendor.mjs && node scripts/build.mjs && node scripts/delivery/prepare-overlay.mjs",
+    "start:local": "node scripts/start-verification.mjs",
+    "build:mmo": "node scripts/build-cloudflare.mjs --exact-assets",
+    "preview:mmo": "node scripts/preview-mmo.mjs",
+    "test": "node --test --test-concurrency=4 --test-timeout=180000 tests/*.test.mjs",
+    "verify:assets": "node scripts/verify-world-assets.mjs",
+    "verify:production": "node scripts/verify-production.mjs",
+    "cave:murals": "node scripts/compose-cave-murals.mjs",
+    "cave:build-art": "node scripts/build-cave-mural-sprites.mjs",
+    "cave:check-art": "node scripts/build-cave-mural-sprites.mjs --check",
+    "check": "node scripts/build.mjs --check && node scripts/check-syntax.mjs && node scripts/check-architecture.mjs",
+    "audit:oss": "node scripts/audit-public-repository.mjs",
+    "build:cloudflare": "node scripts/build-cloudflare.mjs",
+    "dev:cloudflare": "node scripts/preview-mmo.mjs",
+    "check:cloudflare": "wrangler deploy --dry-run",
+    "deploy:cloudflare": "node scripts/deploy-cloudflare.mjs",
+    "build": "node scripts/build.mjs",
+    "cook": "node scripts/build.mjs && node scripts/delivery/prepare-overlay.mjs",
+    "bake:world": "node scripts/build.mjs && node scripts/bake-world-data.mjs && node scripts/build.mjs",
+    "typecheck": "node scripts/build.mjs --check",
+    "pretest": "node scripts/prepare-vendor.mjs && node scripts/build.mjs",
+    "format": "prettier --write \"{src,shared,application,infrastructure,cloudflare}/**/*.{ts,mts}\" server.mts",
+    "format:check": "prettier --check \"{src,shared,application,infrastructure,cloudflare}/**/*.{ts,mts}\" server.mts",
+    "predev:cloudflare": "node scripts/build-cloudflare.mjs --exact-assets",
+    "precheck:cloudflare": "node scripts/build-cloudflare.mjs",
+    "types:cloudflare": "wrangler types cloudflare/env.d.ts --include-runtime=false"
+  },
+  "engines": {
+    "node": "^24.22.1 || ^26.13.0"
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "1.0.1",
+    "three": "^0.185.1",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261006.1",
+    "@types/node": "^22.20.1",
+    "@types/three": "^0.185.4",
+    "@types/ws": "^8.18.1",
+    "esbuild": "0.28.1",
+    "meshoptimizer": "1.1.1",
+    "miniflare": "5.20261012.0-beta",
+    "playwright": "1.64.1",
+    "prettier": "^3.9.6",
+    "sharp": "0.35.5",
+    "typescript": "^6.0.2",
+    "wrangler": "4.151.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "undici": "7.30.1"
+    },
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd"
+    ]
+  }
+}

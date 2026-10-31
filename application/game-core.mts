@@ -1,0 +1,1117 @@
+import {
+  MASCOT_KEYS,
+  cancelMascotPets,
+  chooseMascot,
+  chooseMascots,
+  selectedMascotKeys,
+  formerMascotBonds,
+  mascotSelectable,
+  syncMascots,
+  updateMascots,
+} from '../shared/mascot-selection.mjs';
+import { BOT_KINDS } from '../shared/orb-bots.mjs';
+import { caveInteriorWeight } from '../shared/cave-light.mjs';
+import { updateFishing, cancelFishing } from '../shared/fishing.mjs';
+import { DEFAULT_RULES, EXHIBITION_RULES, clientRules, roomRules } from '../shared/room-rules.mjs';
+import { createHouseholds, householdSnapshots } from '../shared/household-life.mjs';
+import {
+  createResidents,
+  updateResidents,
+  ensureVillageProgress,
+  residentSnapshots,
+} from '../shared/village-life.mjs';
+import { updateCoastal, cancelCoastal } from '../shared/coastal-craft.mjs';
+import { activateMiddenObstacle } from '../shared/coastal-sites.mjs';
+import { ensureAdventure, updateAdventures } from '../shared/adventures.mjs';
+import { createGulfState, ensureGulfPlayer, updateGulf } from '../shared/gulf-life.mjs';
+import { migrateGulfRecord } from '../shared/gulf-migration.mjs';
+import { retireGulfRecord } from '../shared/gulf-retirement.mjs';
+import { GULF } from '../shared/gulf-region.mjs';
+import {
+  actorObstacle,
+  createAnimals,
+  restoreAnimalGround,
+  updateAnimals,
+} from '../shared/animals.mjs';
+import {
+  BOATING,
+  boardedBoat,
+  carriedBoats,
+  initializeBoats,
+  releaseBoat,
+  restoreBoatMooring,
+  updateBoats,
+} from '../shared/boats.mjs';
+import { characterModel, normalizeCharacter } from '../shared/characters.mjs';
+import { ACTIVE_MASCOT_MODELS } from '../shared/mascot-roster.mjs';
+import {
+  ALL_CONTENT,
+  visibleCharacters,
+  type ContentVisibility,
+} from '../shared/content-visibility.mjs';
+import { CollisionWorld, overlap } from '../shared/collision.mjs';
+import { attackProfile } from '../shared/combat-profiles.mjs';
+import { COMPANION_524 } from '../shared/companion-524.mjs';
+import { INTRO_COOLDOWN_MS, INTRO_MAX_LENGTH } from '../shared/player-profile.mjs';
+import { normalizeDye } from '../shared/clothing-dye.mjs';
+import { handleBarterCommand, cancelBarter, updateBarters } from '../shared/barter.mjs';
+import { updateSuppers } from '../shared/supper.mjs';
+import { updateForaging } from '../shared/foraging.mjs';
+import { updateWatering } from '../shared/watering.mjs';
+import { enemyIsSolid, stopActor } from '../shared/combat.mjs';
+import { createEnemies, updateEnemies } from '../shared/enemies.mjs';
+import { BEHEMOTH } from '../shared/behemoth-rules.mjs';
+import { SABERTOOTH } from '../shared/sabertooth-rules.mjs';
+import { animalIsSolid, updateHunting } from '../shared/hunting.mjs';
+import { movePlayer } from '../shared/movement.mjs';
+import { CAMP_SPAWN, spawnFacing, spawnSite } from '../shared/spawn-sites.mjs';
+import { canStartJump, jumpProgress } from '../shared/jumping.mjs';
+import { stepKnockback } from '../shared/knockback.mjs';
+import { normalizeDifficulty } from '../shared/difficulty.mjs';
+
+import { carrying, updateCarrying, releaseCarry, clearCarryOffer } from '../shared/carrying.mjs';
+import { RIDING, mountedAnimal, releaseRider } from '../shared/riding.mjs';
+import { SCENERY } from '../shared/scenery-layout.mjs';
+import { CAMP, INITIAL_RESOURCES, WORLD } from '../shared/world.mjs';
+import { createActionHandler } from './actions.mjs';
+import { defaultRuntime, type GameConnection, type Runtime } from './ports.mjs';
+import { decodeCommand } from './protocol.mjs';
+import { activeMapPins, MAP_PIN_COOLDOWN_MS, MAP_PIN_LIFETIME_MS } from '../shared/map-pins.mjs';
+import { locationName } from '../shared/paleo-geography.mjs';
+import { snapshot as createSnapshot } from './snapshot.mjs';
+import { IDLE_TIMEOUT_MS, IDLE_CLOSE_CODE, IDLE_MESSAGE } from '../shared/player-inactivity.mjs';
+const COLORS = ['#e4ac65', '#87b899', '#b49cd2', '#76a7c3', '#ce8c8b'];
+const cleanText = (value, max) =>
+  typeof value === 'string'
+    ? Array.from(value.replace(/[\u0000-\u001f\u007f]/g, '').trim())
+        .slice(0, max)
+        .join('')
+    : '';
+const clamp = (number, min, max) => Math.max(min, Math.min(max, number));
+const send = (socket, payload) => {
+  if (socket.readyState === 1 && socket.bufferedAmount < 512 * 1024) {
+    socket.send(JSON.stringify(payload));
+  }
+};
+
+export function createGameCore({
+  resumeGraceMs = 120000,
+  keepEmptyRooms = false,
+  maxSavedSessions = Infinity,
+  persistentSessions = false,
+  playerLimit = WORLD.maxPlayers,
+  disconnectIdlePlayers = true,
+  runtime = defaultRuntime,
+  exhibition = false,
+  visibility: requestedVisibility = ALL_CONTENT,
+  mascotModels = ACTIVE_MASCOT_MODELS,
+  multiMascots = false,
+}: {
+  resumeGraceMs?: number;
+  keepEmptyRooms?: boolean;
+  maxSavedSessions?: number;
+  persistentSessions?: boolean;
+  playerLimit?: number;
+  disconnectIdlePlayers?: boolean;
+  runtime?: Runtime;
+  exhibition?: boolean;
+  visibility?: ContentVisibility;
+  mascotModels?: readonly string[];
+  multiMascots?: boolean;
+} = {}) {
+  if (!Number.isInteger(playerLimit) || playerLimit < 1 || playerLimit > 64)
+    throw new Error('playerLimit must be an integer from 1 to 64');
+  const rooms = new Map();
+  const visibility = Object.freeze({
+    hiddenCharacters: Object.freeze([...requestedVisibility.hiddenCharacters]),
+    hideMae: requestedVisibility.hideMae,
+  });
+  const characters = visibleCharacters(visibility);
+  const mascotEnabled = (key: string) =>
+    mascotModels.includes(key) &&
+    (key !== 'howkey-scientist' || !visibility.hiddenCharacters.includes('howkey')) &&
+    (key !== 'mae' || !visibility.hideMae);
+  // Dots are always available; the others while their models are released and visible.
+  const mascotKeys = Object.freeze(
+    MASCOT_KEYS.filter(
+      (key) =>
+        BOT_KINDS.some((kind) => kind === key) ||
+        mascotEnabled(key === '524' ? COMPANION_524.modelKey : key),
+    ),
+  );
+  const fallback = characters.find((model) => model.species === 'cro');
+  if (!fallback) throw new Error('The default character must remain available');
+  function proposedAppearance(requested) {
+    const preferred = normalizeCharacter(requested);
+    const available = characters.some((model) => model.key === preferred.character);
+    // Keep the old look in the private save while its content is hidden. An explicit
+    // later choice replaces it; re-enabling the content can otherwise restore it.
+    const appearance = available
+      ? preferred
+      : normalizeCharacter({
+          species: fallback.species,
+          gender: preferred.gender,
+        });
+    return { ...appearance, unavailableCharacter: available ? undefined : preferred };
+  }
+  function applyAppearance(player, appearance) {
+    Object.assign(player, appearance);
+    if (!appearance.unavailableCharacter) delete player.unavailableCharacter;
+  }
+  const resettingRooms = new Set<string>();
+  let closing = false;
+  const sessionExpiry = (now: number) =>
+    persistentSessions ? Number.MAX_SAFE_INTEGER : now + resumeGraceMs;
+  function broadcast(room, payload) {
+    const encoded = JSON.stringify(payload);
+    let full;
+    for (const player of room.players.values()) {
+      if (player.socket.readyState !== 1) continue;
+      if (player.socket.bufferedAmount >= 512 * 1024) {
+        if (payload.type === 'state') player.needsWorld = true;
+        continue;
+      }
+      if (payload.type === 'state' && player.needsWorld) {
+        full ??= JSON.stringify(snapshot(room, true));
+        player.socket.send(full);
+        player.needsWorld = false;
+      } else player.socket.send(encoded);
+    }
+  }
+
+  function snapshot(room, includeWorld = false) {
+    return createSnapshot(room, includeWorld, runtime.now());
+  }
+
+  /** Everyone present learns everyone's self-introduction: on each arrival and on each
+   * change, never in the frequent state snapshots. Exhibition visits carry no free text. */
+  function broadcastIntros(room) {
+    if (exhibition) return;
+    broadcast(room, {
+      type: 'intros',
+      intros: Object.fromEntries([...room.players.values()].map((p) => [p.id, p.intro ?? ''])),
+    });
+  }
+
+  function systemChat(room, text) {
+    broadcast(room, {
+      type: 'chat',
+      id: runtime.id(),
+      name: '谷の声',
+      text,
+      system: true,
+      at: runtime.now(),
+    });
+  }
+
+  function notice(player, text, tone = 'info', popup = tone !== 'success') {
+    // Completed actions are visible in animations, meters and inventory.
+    // Keep their sound feedback; reserve popups for information the player needs to act on.
+    send(player.socket, { type: 'notice', text, tone, popup });
+  }
+
+  const act = createActionHandler({
+    notice,
+    broadcast,
+    snapshot,
+    systemChat,
+    runtime,
+    visibility,
+    reply: (player, message) => send(player.socket, message),
+  });
+
+  function ensureRoom(roomName) {
+    let room = rooms.get(roomName);
+    if (!room) {
+      room = {
+        name: roomName,
+        playerLimit,
+        rules: exhibition ? EXHIBITION_RULES : DEFAULT_RULES,
+        createdAt: runtime.now(),
+        players: new Map(),
+        sessions: new Map(),
+        enemies: [],
+        resources: INITIAL_RESOURCES.map((resource) => ({
+          ...resource,
+          regeneratedAt: runtime.now(),
+        })),
+        camp: { ...CAMP },
+        gulf: createGulfState(),
+        barters: [],
+        lastBroadcast: 0,
+      };
+      room.cookingFires = SCENERY.fires.map(({ id, x, z }) => ({
+        id: id ?? `fire-${x}-${z}`,
+        x,
+        z,
+      }));
+      room.resourceById = new Map(room.resources.map((r) => [r.id, r]));
+      room.collision = new CollisionWorld(undefined, {
+        active: (o) =>
+          o.middenId
+            ? activateMiddenObstacle(o, room.gulf)
+            : !o.resourceId || room.resourceById.get(o.resourceId).amount > 0,
+      });
+      initializeBoats(room);
+      room.resourceObstacles = new Map(
+        room.collision.obstacles.filter((o) => o.resourceId).map((o) => [o.resourceId, o]),
+      );
+      room.animals = createAnimals(room.collision);
+      // No companion waits at camp: each arrives beside the person who chose it.
+      room.mascotKeys = mascotKeys;
+      room.multiMascots = multiMascots;
+      room.companions = [];
+      room.orbBots = [];
+      room.enemies = createEnemies(room.collision, room.animals);
+      createResidents(room, [], runtime.now());
+      rooms.set(roomName, room);
+    }
+    return room;
+  }
+
+  function connect(socket: GameConnection, params: URLSearchParams) {
+    if (closing) {
+      socket.close(1012, 'Server restarting');
+      return;
+    }
+    const roomName =
+      cleanText(params.get('room'), 20)
+        .toUpperCase()
+        .replace(/[^A-Z0-9_-]/g, '') || 'EMBER';
+    if (resettingRooms.has(roomName)) {
+      socket.close(1013, 'Room reset in progress');
+      return;
+    }
+    const room = ensureRoom(roomName);
+    const now = runtime.now(),
+      token = params.get('session'),
+      resumable = params.get('resume') === '1';
+    for (const [key, entry] of room.sessions) if (now >= entry.expiresAt) room.sessions.delete(key);
+    const active =
+      resumable && token ? [...room.players.values()].find((p) => p.sessionToken === token) : null;
+    const saved = resumable && token ? room.sessions.get(token) : null;
+    if (room.players.size >= playerLimit && !active) {
+      send(socket, {
+        type: 'error',
+        code: 'ROOM_FULL',
+        text: `この部屋は現在の上限${playerLimit}人に達しました。別の部屋の名前で参加してください。`,
+      });
+      socket.close(4001, 'Room full');
+      return;
+    }
+    const usedColors = new Set([...room.players.values()].map((player) => player.color));
+    const resumed = !!(active || saved);
+    const player = active ||
+      saved?.player || {
+        id: runtime.id(),
+        name: cleanText(params.get('name'), 16) || '旅人',
+        ...normalizeCharacter({
+          species: params.get('species'),
+          gender: params.get('gender'),
+          character: params.get('character'),
+        }),
+        x: 48 + room.players.size * 1.1,
+        z: 57 + (room.players.size % 2),
+        color: COLORS.find((color) => !usedColors.has(color)) || COLORS[0],
+        inventory: { wood: 0, stone: 0, berry: 0, rawMeat: 0, cookedMeat: 0 },
+        gathered: 0,
+        tool: false,
+        mountId: null,
+        boatId: null,
+        attackSequence: 0,
+        attackAt: 0,
+        pendingStrike: null,
+        cookingEndsAt: 0,
+        hurtSequence: 0,
+        hurtAt: 0,
+        defeatSequence: 0,
+        downedUntil: 0,
+        invulnerableUntil: 0,
+        ready: room.camp.level > 0,
+        energy: 100,
+        facing: 0,
+        moving: false,
+        running: false,
+        runningRequested: false,
+        speed: 0,
+        radius: WORLD.playerRadius,
+        path: [],
+        dx: 0,
+        dz: 0,
+        target: null,
+        lastInput: 0,
+        lastAction: 0,
+        lastChat: 0,
+        tokens: 70,
+        refillAt: runtime.now(),
+        alive: true,
+        socket,
+        sessionToken: resumable ? runtime.token() : null,
+        difficulty: normalizeDifficulty(params.get('difficulty')),
+        // The confirmed setup may choose one after a valid arrival point is found.
+        mascot: null,
+        intro: '',
+        // The clothing colour last chosen on this browser, or the character's own.
+        dye: normalizeDye(params.get('dye')),
+      };
+    // Only an explicit confirmed title start picks a new appearance and camp
+    // spawn. A dropped connection continues with the saved player and position.
+    const startAtCamp = params.get('startAtCamp') === '1';
+    // A solo resume can change its confirmed outfit while keeping its saved location.
+    const chooseAppearance = startAtCamp || params.get('chooseAppearance') === '1';
+    const appearance = proposedAppearance(
+      chooseAppearance
+        ? {
+            species: params.get('species'),
+            gender: params.get('gender'),
+            character: params.get('character'),
+          }
+        : (player.unavailableCharacter ?? player),
+    );
+    const radius = characterModel(appearance).radius ?? WORLD.playerRadius;
+    ensureAdventure(player);
+    ensureGulfPlayer(player);
+    player.inventory.boat = carriedBoats(player);
+    ensureVillageProgress(player);
+    if (active) cancelBarter(room, player.id, now, '接続が切り替わったので、交換を中止しました。');
+    if (active?.boatId) releaseBoat(room, player);
+    const dynamic = [...room.players.values()]
+      .filter((p) => p !== player && !p.mountId)
+      .concat(room.animals.filter(animalIsSolid), room.enemies.filter(enemyIsSolid), room.residents)
+      .map(actorObstacle);
+    const otherPlayers = room.players.size - (active ? 1 : 0);
+    // The camp unless this room lets a title start name another sight.
+    const site =
+      startAtCamp && roomRules(room).spawnChoice ? spawnSite(params.get('spawn')) : CAMP_SPAWN;
+    const origin = startAtCamp
+      ? { x: site.x + otherPlayers * 1.1, z: site.z + (otherPlayers % 2) }
+      : player;
+    const spawn =
+      room.collision.nearestFree(origin, radius, dynamic) ||
+      (resumed &&
+        room.collision.nearestFree({ x: room.camp.x - 1, z: room.camp.z + 3 }, radius, dynamic));
+    if (!spawn) {
+      send(socket, { type: 'error', code: 'NO_SPAWN', text: '安全な参加地点がありません。' });
+      socket.close();
+      return;
+    }
+    if (active) {
+      const oldSocket = player.socket;
+      if (startAtCamp) {
+        clearCarryOffer(room, player);
+        releaseCarry(room, player, true);
+      }
+      releaseRider(room, player);
+      player.pendingStrike = null;
+      player.cookingEndsAt = 0;
+      cancelFishing(player);
+      cancelCoastal(player);
+      room.projectiles = (room.projectiles || []).filter(
+        (projectile) => projectile.ownerId !== player.id,
+      );
+      player.socket = socket;
+      send(oldSocket, {
+        type: 'error',
+        code: 'SESSION_REPLACED',
+        text: '同じプレイヤーが別の画面で再接続しました。この画面からは参加し直せます。',
+      });
+      oldSocket.close(4004, 'Session replaced');
+    }
+    if (saved) room.sessions.delete(token);
+    // Commit a chosen or substituted look only after an arrival point succeeds.
+    applyAppearance(player, appearance);
+    if (chooseAppearance) {
+      player.name = cleanText(params.get('name'), 16) || player.name;
+      player.dye = normalizeDye(params.get('dye'));
+    }
+    Object.assign(player, {
+      socket,
+      radius,
+      alive: true,
+      tokens: 70,
+      refillAt: now,
+      lastInput: 0,
+      lastAction: 0,
+      lastChat: 0,
+      lastActivityAt: now,
+      jumpAt: 0,
+      jumpSequence: 0,
+      // A reconnection arrives standing; any slide from before it is over.
+      knockbackDone: 1,
+      runningRequested: false,
+      needsWorld: false,
+      ready: room.camp.level > 0,
+      difficulty: normalizeDifficulty(params.get('difficulty') ?? player.difficulty),
+    });
+    stopActor(player);
+    Object.assign(player, spawn);
+    if (startAtCamp && site !== CAMP_SPAWN) player.facing = spawnFacing(player, site);
+    room.players.set(player.id, player);
+    // Only an explicit title start or a new visitor applies this draft. Automatic
+    // reconnections retain the server's choice, even if a browser cache is stale.
+    if ((!resumed || chooseAppearance) && params.has('mascot')) {
+      const choice = params.get('mascot');
+      if (choice === 'none' || choice === '') chooseMascot(room, player, null, now);
+      else if (multiMascots && choice !== 'keep')
+        chooseMascots(room, player, choice.split(','), now);
+      else if (mascotSelectable(room, choice)) chooseMascot(room, player, choice, now);
+    }
+    // The chosen companion arrives beside them, as it does on every return.
+    syncMascots(room, now);
+    send(socket, {
+      type: 'welcome',
+      persistentSession: persistentSessions,
+      ridingVersion: RIDING.version,
+      combatVersion: 3,
+      characterVersion: 2,
+      worldVersion: WORLD.version,
+      id: player.id,
+      room: roomName,
+      resumed,
+      session: player.sessionToken,
+      rules: clientRules(room),
+      mascots: room.mascotKeys,
+      profile: {
+        name: player.name,
+        species: player.species,
+        gender: player.gender,
+        character: player.character,
+        difficulty: player.difficulty,
+        dye: player.dye ?? null,
+        mascot: player.mascot ?? null,
+        ...(multiMascots ? { mascots: selectedMascotKeys(player) } : {}),
+      },
+    });
+    broadcast(room, snapshot(room, true));
+    broadcastIntros(room);
+    systemChat(room, `${player.name} が谷に${resumed ? '戻ってきた' : 'やってきた'}。`);
+    socket.on('pong', () => {
+      if (player.socket === socket) player.alive = true;
+    });
+    socket.on('error', () => {});
+    socket.on('message', (data, isBinary) => {
+      if (
+        closing ||
+        isBinary ||
+        player.socket !== socket ||
+        resettingRooms.has(roomName) ||
+        rooms.get(roomName) !== room
+      )
+        return;
+      const now = runtime.now();
+      player.tokens = Math.min(70, player.tokens + (now - player.refillAt) * 0.035);
+      player.refillAt = now;
+      if (player.tokens < 1) return;
+      player.tokens -= 1;
+      const message = decodeCommand(data.toString());
+      if (!message) return;
+      // Heartbeats and automatic stop/cancel frames do not prove someone is playing.
+      if (
+        message.type !== 'ping' &&
+        message.type !== 'leave' &&
+        (message.type !== 'move' ||
+          Math.hypot(message.dx, message.dz) > 0.01 ||
+          (message.facing !== undefined && message.facing !== player.facing)) &&
+        (message.type !== 'action' ||
+          !['cancelBotThrows', 'cancelFishing', 'cancelCoastal'].includes(message.action))
+      )
+        player.lastActivityAt = now;
+      if (message.type === 'activity') return;
+      if (message.type === 'mapPin' || message.type === 'clearMapPin') {
+        room.mapPins = activeMapPins(room, now);
+        if (
+          message.type === 'mapPin' &&
+          now - (player.lastMapPinAt ?? -Infinity) < MAP_PIN_COOLDOWN_MS
+        )
+          return;
+        room.mapPins = room.mapPins.filter((pin) => pin.ownerId !== player.id);
+        if (message.type === 'mapPin') {
+          player.lastMapPinAt = now;
+          const pin = {
+            id: runtime.id(),
+            ownerId: player.id,
+            name: player.name,
+            color: player.color,
+            x: message.x,
+            z: message.z,
+            expiresAt: now + MAP_PIN_LIFETIME_MS,
+          };
+          room.mapPins.push(pin);
+          broadcast(room, {
+            type: 'chat',
+            id: pin.id,
+            name: player.name,
+            text: `ここへ行こう！ ${locationName(pin.x, pin.z)}（地図にピン）`,
+            at: now,
+            mapPin: true,
+          });
+        }
+        broadcast(room, snapshot(room));
+        return;
+      }
+      if (message.type === 'leave') {
+        if (!message.keepSession) player.sessionToken = null;
+        socket.close(1000, 'Explicit leave');
+        return;
+      }
+      if (message.type === 'barter') {
+        if (message.kind !== 'cancel' && (carrying(player) || jumpProgress(player, now) !== null)) {
+          notice(player, '地面に降りてから交換しよう。');
+          return;
+        }
+        if (message.kind !== 'cancel' && now - player.lastAction < 450) return;
+        if (message.kind !== 'cancel') player.lastAction = now;
+        const result = handleBarterCommand(room, player, message, now, runtime.id);
+        if (result.text) notice(player, result.text, result.ok ? 'success' : 'info');
+        if (result.changed) broadcast(room, snapshot(room));
+        return;
+      }
+      if (player.carrierId && ['move', 'gait'].includes(message.type)) return;
+      const controlled = boardedBoat(room, player) || mountedAnimal(room, player) || player;
+      if (
+        player.downedUntil &&
+        ['move', 'gait', 'action'].includes(message.type) &&
+        !(
+          message.type === 'action' &&
+          ['inventoryCraft', 'equipItem', 'dyeClothes'].includes(message.action)
+        )
+      ) {
+        if (message.type === 'action')
+          notice(player, '回復を待っています。間もなく焚き火へ戻ります。', 'info');
+        return;
+      }
+      if (message.type === 'move' && Number.isFinite(message.dx) && Number.isFinite(message.dz)) {
+        // An explicit steering input can turn in place; it is still an intentional
+        // departure from petting. Cancellation keeps each companion's owner.
+        if (message.facing !== undefined && controlled === player)
+          cancelMascotPets(room, player.id, now);
+        if (Math.hypot(message.dx, message.dz) > 0.01) {
+          cancelBarter(room, player.id, now, '移動を始めたので、交換を中止しました。');
+          cancelFishing(player);
+          cancelCoastal(player);
+        }
+        const dx = clamp(message.dx, -1, 1);
+        const dz = clamp(message.dz, -1, 1);
+        const length = Math.max(1, Math.hypot(dx, dz));
+        controlled.dx = dx / length;
+        controlled.dz = dz / length;
+        // Optional steering heading also keeps reverse travel facing forward.
+        controlled.inputFacing = message.facing;
+        controlled.lastInput = now;
+        controlled.runningRequested = message.running === true || roomRules(room).alwaysRun;
+        controlled.target = null;
+        controlled.path = [];
+        controlled.navigationGoal = null;
+        controlled.navigationEnd = null;
+      } else if (message.type === 'gait' && typeof message.running === 'boolean') {
+        controlled.runningRequested = message.running || roomRules(room).alwaysRun;
+      } else if (
+        message.type === 'action' &&
+        typeof message.action === 'string' &&
+        (message.action === 'inventoryCraft' ||
+          message.action === 'equipItem' ||
+          message.action === 'attack' ||
+          message.action === 'jump' ||
+          message.action === 'cancelCook' ||
+          message.action === 'cancelFishing' ||
+          message.action === 'cancelCoastal' ||
+          message.action === 'throwBot' ||
+          message.action === 'recallBots' ||
+          message.action === 'cancelBotThrows' ||
+          message.action === 'selectMascot' ||
+          message.action === 'selectAllMascots' ||
+          message.action === 'deselectMascot' ||
+          message.action === 'dyeClothes' ||
+          message.action === 'rift' ||
+          message.action === 'warp' ||
+          message.action === 'changeCharacter' ||
+          now - player.lastAction >= 450)
+      ) {
+        if (message.action === 'attack' && caveInteriorWeight(player) > 0) return;
+        if (message.action === 'jump' && !canStartJump(player, now)) return;
+        if (
+          ![
+            'cancelFishing',
+            'cancelCoastal',
+            'cancelCook',
+            'cancelBotThrows',
+            'recallBots',
+            'selectMascot',
+            'selectAllMascots',
+            'deselectMascot',
+            'dyeClothes',
+            'wave',
+          ].includes(message.action)
+        )
+          cancelBarter(room, player.id, now, '別の作業を始めたので、交換を中止しました。');
+        if (
+          ![
+            'cancelFishing',
+            'cancelCoastal',
+            'cancelBotThrows',
+            'throwBot',
+            'recallBots',
+            'selectMascot',
+            'selectAllMascots',
+            'deselectMascot',
+            'dyeClothes',
+            'jump',
+          ].includes(message.action)
+        )
+          player.lastAction = now;
+        act(room, player, message, now);
+      } else if (message.type === 'chat' && now - player.lastChat >= 600) {
+        const chatText = cleanText(message.text, 180);
+        if (!chatText) return;
+        player.lastChat = now;
+        broadcast(room, {
+          type: 'chat',
+          id: runtime.id(),
+          name: player.name,
+          text: chatText,
+          at: now,
+        });
+      } else if (message.type === 'introduce') {
+        if (exhibition || now - (player.lastIntroAt ?? -Infinity) < INTRO_COOLDOWN_MS) return;
+        player.lastIntroAt = now;
+        const intro = cleanText(message.text, INTRO_MAX_LENGTH);
+        if (intro === (player.intro ?? '')) return;
+        player.intro = intro;
+        broadcastIntros(room);
+      } else if (
+        message.type === 'ping' &&
+        (typeof message.at === 'number' || typeof message.at === 'string')
+      ) {
+        send(socket, {
+          type: 'pong',
+          at: typeof message.at === 'string' ? message.at.slice(0, 40) : message.at,
+        });
+      }
+    });
+    socket.on('close', () => {
+      if (player.socket !== socket || rooms.get(roomName) !== room) return;
+      cancelBarter(room, player.id, runtime.now(), '相手が接続を離れたので、交換を中止しました。');
+      clearCarryOffer(room, player);
+      releaseCarry(room, player, true);
+      releaseBoat(room, player);
+      releaseRider(room, player);
+      player.pendingStrike = null;
+      player.cookingEndsAt = 0;
+      cancelFishing(player);
+      cancelCoastal(player);
+      room.projectiles = (room.projectiles || []).filter(
+        (projectile) => projectile.ownerId !== player.id,
+      );
+      room.players.delete(player.id);
+      // A companion leaves with its person; the choice stays with their save.
+      syncMascots(room, runtime.now());
+      room.mapPins = activeMapPins(room, runtime.now());
+      if (!room.players.size)
+        for (const resident of room.residents) {
+          resident.forageWork = null;
+          resident.wateringWork = null;
+          resident.wateringTarget = null;
+        }
+      if (!closing && player.sessionToken && resumeGraceMs > 0)
+        room.sessions.set(player.sessionToken, {
+          player,
+          expiresAt: sessionExpiry(runtime.now()),
+        });
+      while (room.sessions.size > maxSavedSessions)
+        room.sessions.delete(room.sessions.keys().next().value);
+      if (!keepEmptyRooms && room.players.size === 0 && !room.sessions.size) rooms.delete(roomName);
+      else {
+        systemChat(room, `${player.name} が谷をあとにした。`);
+        broadcast(room, snapshot(room, true));
+      }
+    });
+  }
+
+  let previousTick = runtime.now();
+  let lastHeartbeat = runtime.now();
+  function tick() {
+    if (closing) return;
+    const now = runtime.now();
+    const dt = Math.min((now - previousTick) / 1000, 0.15);
+    previousTick = now;
+    const heartbeat = now - lastHeartbeat > 15000;
+    if (heartbeat) lastHeartbeat = now;
+    for (const room of rooms.values()) {
+      if (resettingRooms.has(room.name)) continue;
+      for (const [token, entry] of room.sessions)
+        if (now >= entry.expiresAt) room.sessions.delete(token);
+      if (!room.players.size) {
+        updateMascots(room, dt, now);
+        updateBarters(room, now);
+        for (const resident of room.residents) {
+          resident.forageWork = null;
+          resident.wateringWork = null;
+          resident.wateringTarget = null;
+        }
+        if (!keepEmptyRooms && !room.sessions.size) rooms.delete(room.name);
+        continue;
+      }
+      for (const player of room.players.values()) {
+        if (player.socket.readyState !== 1) continue;
+        if (disconnectIdlePlayers && now - player.lastActivityAt >= IDLE_TIMEOUT_MS) {
+          send(player.socket, { type: 'error', code: 'IDLE_TIMEOUT', text: IDLE_MESSAGE });
+          // Use the ordinary disconnect path so possessions and resume tokens survive.
+          player.socket.close(IDLE_CLOSE_CODE, 'Idle timeout');
+          continue;
+        }
+        const dynamic = [...room.players.values()]
+          .filter((p) => p !== player && !p.carrierId)
+          .concat(
+            room.animals.filter(animalIsSolid),
+            room.enemies.filter(enemyIsSolid),
+            room.residents,
+          )
+          .map(actorObstacle);
+        const move = (p, dx, dz) => room.collision.move(p, dx, dz, player.radius, dynamic);
+        const beforeX = player.x,
+          beforeZ = player.z;
+        if (stepKnockback(player, now, move)) {
+          // Knocked back by another player: slide first, steer once it settles.
+          player.speed = 0;
+          player.moving = false;
+          player.running = false;
+          player.velocityX = dt > 0 ? (player.x - beforeX) / dt : 0;
+          player.velocityZ = dt > 0 ? (player.z - beforeZ) / dt : 0;
+        } else if (
+          player.downedUntil ||
+          (player.attackSequence && now - player.attackAt < attackProfile(player).durationMs)
+        ) {
+          player.speed = 0;
+          player.moving = false;
+          player.running = false;
+        } else if (!player.mountId && !player.boatId && !player.carrierId) {
+          movePlayer(player, dt, now, move, undefined, roomRules(room).speedScale);
+        }
+        if (player.caveTorchOff && caveInteriorWeight(player) === 0) player.caveTorchOff = false;
+        if (heartbeat) {
+          if (!player.alive) {
+            player.socket.terminate();
+            continue;
+          }
+          player.alive = false;
+          player.socket.ping();
+        }
+      }
+      updateCarrying(room, now);
+      updateBoats(room, dt, now);
+      updateResidents(room, dt, now);
+      const foragingChanged = updateForaging(room, dt, now);
+      const wateringChanged = updateWatering(room, dt, now);
+      const supperChanged = updateSuppers(room, now);
+      const huntingChanged = updateHunting(room, now, notice);
+      updateMascots(room, dt, now);
+      updateAnimals(room, dt, now);
+      const enemiesChanged = updateEnemies(room, dt, now, notice);
+      updateCarrying(room, now);
+      updateAdventures(room, now, notice);
+      const gulfChanged = updateGulf(room, now) || supperChanged || wateringChanged;
+      const fishingChanged = updateFishing(room, now, notice);
+      const coastalChanged = updateCoastal(room, now, notice);
+      const barterChanged = updateBarters(room, now);
+      let resourcesChanged = foragingChanged;
+      for (const resource of room.resources) {
+        if (resource.amount < resource.maxAmount && now - resource.regeneratedAt >= 20000) {
+          const obstacle = room.resourceObstacles.get(resource.id);
+          if (
+            resource.amount === 0 &&
+            obstacle &&
+            [
+              ...room.players.values(),
+              ...room.animals.filter(animalIsSolid),
+              ...room.enemies.filter(enemyIsSolid),
+              ...room.residents,
+            ].some((actor) => overlap(actor, actor.radius, obstacle))
+          )
+            continue;
+          resourcesChanged = true;
+          resource.amount += 1;
+          resource.regeneratedAt = now;
+        }
+      }
+      if (
+        now - room.lastBroadcast >= 90 ||
+        resourcesChanged ||
+        gulfChanged ||
+        huntingChanged ||
+        enemiesChanged ||
+        fishingChanged ||
+        barterChanged ||
+        coastalChanged
+      ) {
+        broadcast(
+          room,
+          snapshot(room, resourcesChanged || gulfChanged || fishingChanged || coastalChanged),
+        );
+        room.lastBroadcast = now;
+      }
+    }
+  }
+
+  async function resetRoom(
+    roomName: string,
+    persist: (state: ReturnType<typeof exportState>) => Promise<unknown>,
+  ) {
+    const room = rooms.get(roomName);
+    if (closing || !room || resettingRooms.has(roomName)) throw new Error('Room unavailable');
+    resettingRooms.add(roomName);
+    try {
+      // Commit the reset on disk first. Failure leaves the current room and its sessions intact.
+      const checkpoint = exportState();
+      checkpoint.rooms = checkpoint.rooms.filter((record) => record.name !== roomName);
+      await persist(checkpoint);
+      rooms.delete(roomName);
+      broadcast(room, { type: 'roomReset' });
+      for (const player of room.players.values()) player.socket.close(1012, 'Room reset');
+    } finally {
+      resettingRooms.delete(roomName);
+    }
+  }
+
+  function exportState() {
+    const now = runtime.now();
+    return {
+      version: 1,
+      worldVersion: WORLD.version,
+      savedAt: now,
+      rooms: [...rooms.values()].map((room) => {
+        const sessions = [...room.sessions.entries()]
+          .filter(([, entry]) => entry.expiresAt > now)
+          .map(([token, entry]) => ({ token, expiresAt: entry.expiresAt, player: entry.player }));
+        for (const player of room.players.values())
+          if (player.sessionToken) {
+            sessions.push({ token: player.sessionToken, expiresAt: sessionExpiry(now), player });
+          }
+        return JSON.parse(
+          JSON.stringify(
+            {
+              name: room.name,
+              createdAt: room.createdAt,
+              camp: room.camp,
+              resources: room.resources,
+              animals: room.animals,
+              // Companions are not world bodies to save: each player's choice is in
+              // their session, and the companion arrives beside them on return.
+              enemies: room.enemies,
+              boats: room.boats,
+              gulf: room.gulf,
+              residents: residentSnapshots(room),
+              households: householdSnapshots(room),
+              sessions: persistentSessions ? sessions : sessions.slice(-100),
+            },
+            (key, value) =>
+              [
+                'socket',
+                'lastActivityAt',
+                'lastMapPinAt',
+                'lastIntroAt',
+                'lastDyeAt',
+                'jumpAt',
+                'jumpSequence',
+                'carrierId',
+                'passengerId',
+                'carryOfferFromId',
+                'carryOfferToId',
+                'carryOfferUntil',
+                'carrySafePoint',
+                'carryHurtSequence',
+                'knockbackAt',
+                'knockbackSequence',
+                'knockbackX',
+                'knockbackZ',
+                'knockbackDistance',
+                'knockbackDone',
+                'knockbackWarp',
+              ].includes(key)
+                ? undefined
+                : value,
+          ),
+        );
+      }),
+    };
+  }
+
+  function importState(saved) {
+    if (
+      !saved ||
+      saved.version !== 1 ||
+      ![2, 3, WORLD.version].includes(saved.worldVersion) ||
+      !Array.isArray(saved.rooms)
+    ) {
+      throw new Error(
+        `Unsupported saved world (schema ${Number(saved?.version)}, world ${Number(saved?.worldVersion)}); refusing to overwrite it`,
+      );
+    }
+    if (rooms.size) throw new Error('Restore requires an empty game');
+    // Restoring must not attach sockets or live mutations to the caller's saved
+    // checkpoint; it may also be retained for verification or another restore.
+    for (const record of JSON.parse(JSON.stringify(saved.rooms))) {
+      if (record.gulf?.version > GULF.version) throw new Error('Unsupported saved gulf version');
+      const movedGulfPlayers = migrateGulfRecord(record);
+      for (const player of retireGulfRecord(record)) movedGulfPlayers.add(player);
+      const room = ensureRoom(record.name);
+      room.createdAt = record.createdAt;
+      Object.assign(room.camp, record.camp);
+      room.gulf = createGulfState(record.gulf);
+      room.boats = [];
+      for (const b of (record.boats || []).slice(0, BOATING.maxBoats)) {
+        const boat = { ...b };
+        stopActor(boat);
+        boat.riderId = null;
+        Object.assign(boat, boat.mooring);
+        restoreBoatMooring(room, boat);
+        room.boats.push(boat);
+      }
+      for (const resource of record.resources) {
+        const current = room.resourceById.get(resource.id);
+        if (current)
+          Object.assign(current, {
+            amount: Math.max(0, Math.min(current.maxAmount, resource.amount)),
+            regeneratedAt: resource.regeneratedAt,
+          });
+      }
+      for (const name of ['animals', 'enemies'])
+        for (const actor of room[name]) {
+          const previous = record[name].find((item) => item.id === actor.id);
+          const post = { x: actor.x, z: actor.z },
+            currentCrow =
+              name === 'enemies' && actor.modelKey === 'crow-shaman'
+                ? {
+                    home: { ...actor.home },
+                    crowRole: actor.crowRole,
+                    tier: actor.tier,
+                    name: actor.name,
+                    scale: actor.scale,
+                    radius: actor.radius,
+                    maxHealth: actor.maxHealth,
+                    roamRadius: actor.roamRadius,
+                    castle: actor.castle,
+                    regionId: actor.regionId,
+                  }
+                : null;
+          if (previous) Object.assign(actor, previous);
+          stopActor(actor);
+          actor.riderId = null;
+          actor.pendingAttack = null;
+          if (name === 'animals') restoreAnimalGround(room, actor, post);
+          if (
+            name === 'enemies' &&
+            ['violet-behemoth', 'sabertooth-tiger'].includes(actor.modelKey)
+          ) {
+            actor.evading = false;
+            actor.superArmor = false;
+            actor.nextPounceAt = 0;
+            actor.nextStepAt = 0;
+            actor.attackLockUntil = 0;
+            actor.targetId = null;
+            actor.returning = actor.phase === 'alive';
+            actor.nextPathAt = 0;
+            actor.nextAttackAt = 0;
+            actor.clip = actor.phase === 'alive' ? 'Idle_Loop' : actor.clip;
+            // The post comes from the current rules, not the save: a save made
+            // before the post moved (the cat left the Siberian snow plain for the
+            // European grassland on 2026-09-11) records the old home. A body left
+            // outside the current territory starts on the post instead of walking
+            // across the world.
+            actor.home = { ...post };
+            const territory = (actor.modelKey === 'violet-behemoth' ? BEHEMOTH : SABERTOOTH)
+              .territoryRadius;
+            if (Math.hypot(actor.x - post.x, actor.z - post.z) > territory)
+              Object.assign(actor, post);
+          } else if (currentCrow?.castle && !currentCrow.regionId) {
+            // Castle faction membership and posts are current world layout, not
+            // save data. This migrates the old three-shaman encounter to the
+            // 28-member hierarchy without leaving saved bodies at the old keep.
+            Object.assign(actor, currentCrow, {
+              home: currentCrow.home,
+              health: Math.min(actor.health ?? currentCrow.maxHealth, currentCrow.maxHealth),
+              airborneHeight: 0,
+              sealed: false,
+              targetId: null,
+              returning: actor.phase === 'alive',
+              nextPathAt: 0,
+              nextBoltAt: 0,
+              nextBurstAt: 0,
+            });
+            if (Math.hypot(actor.x - post.x, actor.z - post.z) > actor.roamRadius + 1)
+              Object.assign(actor, post);
+          }
+        }
+      // Saves from before companions belonged to one person: each owner keeps one.
+      const formerBonds = formerMascotBonds(record);
+      for (const entry of record.sessions)
+        if (entry.expiresAt > runtime.now()) {
+          const player = entry.player;
+          player.intro = cleanText(player.intro, INTRO_MAX_LENGTH);
+          player.dye = normalizeDye(player.dye);
+          if (player.mascot === undefined)
+            player.mascot =
+              formerBonds.get(player.id)?.find((key) => mascotSelectable(room, key)) ?? null;
+          if (multiMascots)
+            player.mascots = selectedMascotKeys(player).filter((key) =>
+              mascotSelectable(room, key),
+            );
+          // Restored profiles must belong to this build's available catalog too.
+          applyAppearance(player, proposedAppearance(player.unavailableCharacter ?? player));
+          player.radius = characterModel(player).radius ?? WORLD.playerRadius;
+          if (player.boatId) {
+            const boat = room.boats.find((b) => b.id === player.boatId);
+            if (boat) Object.assign(player, boat.shore);
+          }
+          player.boatId = null;
+          stopActor(player);
+          player.carrierId = null;
+          player.passengerId = null;
+          player.carryOfferFromId = null;
+          player.carryOfferToId = null;
+          player.carryOfferUntil = 0;
+          player.mountId = null;
+          player.jumpAt = 0;
+          player.jumpSequence = 0;
+          player.pendingStrike = null;
+          player.cookingEndsAt = 0;
+          cancelFishing(player);
+          cancelCoastal(player);
+          ensureGulfPlayer(player);
+          player.inventory.boat = carriedBoats(player);
+          ensureVillageProgress(player);
+          if (movedGulfPlayers.has(player) && !room.collision.free(player, player.radius ?? 0.32)) {
+            const safe =
+              room.collision.nearestFree(player, player.radius ?? 0.32, [], 80) ??
+              room.collision.nearestFree({ x: 49, z: 52.4 }, player.radius ?? 0.32);
+            if (!safe) throw new Error('No safe arrival for migrated player');
+            Object.assign(player, safe);
+          }
+          room.sessions.set(entry.token, {
+            expiresAt: persistentSessions ? Number.MAX_SAFE_INTEGER : entry.expiresAt,
+            player,
+          });
+        }
+      room.households = createHouseholds(record.households, runtime.now());
+      createResidents(room, record.residents, runtime.now());
+    }
+  }
+
+  return {
+    visibility,
+    playerLimit,
+    rooms,
+    snapshot,
+    connect,
+    tick,
+    exportState,
+    importState,
+    resetRoom,
+    pause() {
+      closing = true;
+    },
+    close() {
+      closing = true;
+      rooms.clear();
+    },
+  };
+}

@@ -1,0 +1,49 @@
+# Type, syntax, dependency-boundary and format checks plus the test suite on a clean clone.
+# Tests that need the production files kept outside this repository skip themselves.
+# The full release gate (pnpm run verify:production, with real Chrome) stays a local step.
+# .gitattributes keeps the committed bytes, so the checkout keeps the runner's line-ending default.
+# Actions are pinned to commits; .github/dependabot.yml proposes their updates.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: ${{ matrix.os }}, Node.js ${{ matrix.node || '.nvmrc' }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The project is developed and verified on Windows with the Node.js in .nvmrc.
+          - os: windows-latest
+          - os: ubuntu-latest
+          # The other release line that package.json engines accepts.
+          - os: ubuntu-latest
+            node: '26'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node }}
+          node-version-file: ${{ !matrix.node && '.nvmrc' || '' }}
+      # Node.js 26 no longer comes with Corepack.
+      - if: matrix.node == '26'
+        run: npm install --global corepack@0.36.0
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run audit:oss
+      - run: pnpm run check
+      - run: pnpm run format:check
+      - run: pnpm test

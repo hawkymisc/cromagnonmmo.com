@@ -1,0 +1,230 @@
+import * as THREE from 'three';
+import { BIOMES, biomeWeights, biomeAt } from '../shared/biomes.mjs';
+import { WORLD } from '../shared/world.mjs';
+import { ADVENTURE_REGIONS, regionAt, regionWeight } from '../shared/adventure-regions.mjs';
+import { SEA_WEATHER, maritimeWeight } from '../shared/maritime-weather.mjs';
+import { CAVE_LIGHT, caveInteriorWeight } from '../shared/cave-light.mjs';
+import { DAYLIGHT, wearDaylight, type Daylight } from './actor-daylight.js';
+
+export class WorldAtmosphere {
+  declare world: any;
+  declare fogColors: any;
+  declare skyColors: any;
+  declare lightColors: any;
+  declare target: THREE.Color;
+  declare sky: THREE.Color;
+  declare light: THREE.Color;
+  declare regions: Map<any, any>;
+  declare seaFog: THREE.Color;
+  declare seaSky: THREE.Color;
+  declare seaLight: THREE.Color;
+  private caveDark = new THREE.Color(CAVE_LIGHT.background);
+  private caveSky = new THREE.Color(CAVE_LIGHT.sky);
+  private caveGround = new THREE.Color(CAVE_LIGHT.ground);
+  private caveSun = new THREE.Color(CAVE_LIGHT.sun);
+  private outdoorSky = new THREE.Color(DAYLIGHT.sky);
+  private outdoorGround = new THREE.Color(DAYLIGHT.ground);
+  private hemisphereSky = new THREE.Color();
+  private hemisphereGround = new THREE.Color();
+  /** The scene's lights as they would be here without the cave, eased alike: characters wear
+   * it (actor-daylight.ts), so outdoors they are lit exactly as before and in the cave as outside. */
+  private daylight: Daylight;
+  declare uniforms: {
+    time: {
+      value: number;
+    };
+    centre: {
+      value: THREE.Vector3;
+    };
+    intensity: {
+      value: number;
+    };
+    kind: {
+      value: number;
+    };
+    color: {
+      value: THREE.Color;
+    };
+    pixelScale: {
+      value: number;
+    };
+  };
+  declare particles: THREE.Points<
+    THREE.BufferGeometry<THREE.NormalBufferAttributes, THREE.BufferGeometryEventMap>,
+    THREE.ShaderMaterial,
+    THREE.Object3DEventMap
+  >;
+
+  constructor(world) {
+    this.world = world;
+    this.daylight = {
+      sky: world.hemisphere.color.clone(),
+      ground: world.hemisphere.groundColor.clone(),
+      hemisphere: world.hemisphere.intensity,
+      sun: world.sun.color.clone(),
+      directional: world.sun.intensity,
+      sunDirection: new THREE.Vector3(),
+    };
+    this.fogColors = BIOMES.map((b) => new THREE.Color(b.fog));
+    this.skyColors = BIOMES.map((b) => new THREE.Color(b.sky));
+    this.lightColors = BIOMES.map((b) => new THREE.Color(b.light));
+    this.target = new THREE.Color();
+    this.sky = new THREE.Color();
+    this.light = new THREE.Color();
+    this.seaFog = new THREE.Color('#92a9ad');
+    this.seaSky = new THREE.Color('#798e9a');
+    this.seaLight = new THREE.Color('#cfdee2');
+    this.regions = new Map(
+      ADVENTURE_REGIONS.map((r) => [
+        r.id,
+        {
+          fog: new THREE.Color(r.fog),
+          sky: new THREE.Color(r.sky),
+          light: new THREE.Color(r.light),
+        },
+      ]),
+    );
+    // The one graphics profile's weather particle budget.
+    const seeds = new Float32Array(128 * 3);
+    for (let i = 0; i < seeds.length; i++)
+      seeds[i] = ((i * 1619 + Math.floor(i / 3) * 31337) % 65521) / 65521;
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(seeds, 3));
+    this.uniforms = {
+      time: { value: 0 },
+      centre: { value: new THREE.Vector3() },
+      intensity: { value: 0 },
+      kind: { value: 0 },
+      color: { value: new THREE.Color('#e8f1f7') },
+      pixelScale: { value: 1 },
+    };
+    const material = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      uniforms: this.uniforms,
+      vertexShader: `uniform float time,intensity,kind,pixelScale;uniform vec3 centre;varying float opacity;
+        void main(){vec3 p=position;float snow=1.0-step(.5,kind);float rain=step(1.5,kind);
+        if(rain>.5)p=fract(sin(vec3(dot(p,vec3(127.1,311.7,74.7)),dot(p,vec3(269.5,183.3,246.1)),dot(p,vec3(113.5,271.9,124.6))))*43758.5453);
+        p.x=(p.x-.5)*42.0+sin(time*.21+p.z*30.0)*1.2;
+        p.z=(p.z-.5)*42.0;p.y=mod(p.y*14.0-time*mix(mix(1.1,.42,snow),6.0,rain),14.0)-2.0;
+        p.x+=sin(time*.7+p.y)*mix(2.0,.6,snow);vec4 eye=modelViewMatrix*vec4(p+centre,1.0);
+        gl_Position=projectionMatrix*eye;gl_PointSize=clamp((rain>0.5?55.0:snow>0.5?26.0:16.0)/max(2.0,-eye.z)*pixelScale,1.0,mix(4.0,8.0,rain));
+        opacity=intensity*(1.0-smoothstep(12.0,22.0,length(p.xz)))*.65;}`,
+      fragmentShader:
+        'uniform vec3 color;uniform float kind;varying float opacity;void main(){vec2 p=gl_PointCoord-.5;p.x*=mix(1.0,4.0,step(1.5,kind));float d=length(p);if(d>.5)discard;gl_FragColor=vec4(color,opacity*(1.0-smoothstep(.15,.5,d)));}',
+    });
+    this.particles = new THREE.Points(geometry, material);
+    this.particles.frustumCulled = false;
+    this.particles.visible = false;
+    world.scene.add(this.particles);
+  }
+  update(position, time, dt) {
+    const weights = biomeWeights(position.x, position.z),
+      alpha = 1 - Math.exp(-dt * 1.8);
+    this.target.setRGB(0, 0, 0);
+    this.sky.setRGB(0, 0, 0);
+    this.light.setRGB(0, 0, 0);
+    for (let i = 0; i < weights.length; i++)
+      for (const channel of ['r', 'g', 'b']) {
+        this.target[channel] += this.fogColors[i][channel] * weights[i];
+        this.sky[channel] += this.skyColors[i][channel] * weights[i];
+        this.light[channel] += this.lightColors[i][channel] * weights[i];
+      }
+    const world = this.world;
+    const cave = caveInteriorWeight(position);
+    const region = regionAt(position.x, position.z),
+      weight = regionWeight(region, position.x, position.z),
+      colors = this.regions.get(region?.id);
+    if (colors) {
+      this.target.lerp(colors.fog, weight);
+      this.sky.lerp(colors.sky, weight);
+      this.light.lerp(colors.light, weight);
+    }
+    const shadow = region?.realm ? weight : 0;
+    const weather = world.state.maritime;
+    const seaWeight = weather ? maritimeWeight(position.x, position.z) : 0;
+    const sea = SEA_WEATHER[weather?.kind ?? 'calm'];
+    const mist = sea.fog * seaWeight,
+      dim = sea.dim * seaWeight;
+    this.target.lerp(this.seaFog, mist);
+    this.sky.lerp(this.seaSky, Math.max(mist, dim));
+    this.light.lerp(this.seaLight, dim);
+    const sun = DAYLIGHT.directional - shadow * 1.7 - dim * 2,
+      sky = DAYLIGHT.hemisphere - shadow * 1.1 - dim * 0.6,
+      daylight = this.daylight;
+    daylight.directional += (sun - daylight.directional) * alpha;
+    daylight.hemisphere += (sky - daylight.hemisphere) * alpha;
+    daylight.sky.lerp(this.outdoorSky, alpha);
+    daylight.ground.lerp(this.outdoorGround, alpha);
+    daylight.sun.lerp(this.light, alpha);
+    daylight.sunDirection.subVectors(world.sun.position, world.sun.target.position);
+    wearDaylight(daylight);
+    this.target.lerp(this.caveDark, cave);
+    this.light.lerp(this.caveSun, cave);
+    world.sun.intensity +=
+      (sun * (1 - cave) + CAVE_LIGHT.directional * cave - world.sun.intensity) * alpha;
+    world.hemisphere.intensity +=
+      (sky * (1 - cave) + CAVE_LIGHT.hemisphere * cave - world.hemisphere.intensity) * alpha;
+    world.hemisphere.color.lerp(
+      this.hemisphereSky.copy(this.outdoorSky).lerp(this.caveSky, cave),
+      alpha,
+    );
+    world.hemisphere.groundColor.lerp(
+      this.hemisphereGround.copy(this.outdoorGround).lerp(this.caveGround, cave),
+      alpha,
+    );
+    world.skyUniforms.shadowRealm.value += (shadow - world.skyUniforms.shadowRealm.value) * alpha;
+    world.scene.fog.color.lerp(this.target, alpha);
+    world.sun.color.lerp(this.light, alpha);
+    const edge = Math.min(
+      position.x - WORLD.minX,
+      WORLD.maxX - position.x,
+      position.z - WORLD.minZ,
+      WORLD.maxZ - position.z,
+    );
+    world.scene.fog.near +=
+      ((45 - mist * 23) * (1 - cave) + CAVE_LIGHT.fogNear * cave - world.scene.fog.near) * alpha;
+    world.scene.fog.far +=
+      ((118 - mist * 52) * (1 - cave) + CAVE_LIGHT.fogFar * cave - world.scene.fog.far) * alpha;
+    world.scene.fog.near = Math.min(world.scene.fog.near, Math.max(5, edge * 0.4));
+    world.scene.fog.far = Math.min(world.scene.fog.far, Math.max(12, edge + 8));
+    world.skyUniforms.biomeFog.value.copy(world.scene.fog.color);
+    world.skyUniforms.biomeSky.value.lerp(this.sky, alpha);
+    const biome = biomeAt(position.x, position.z),
+      snow = weights[1] + weights[2],
+      ash = weights[3],
+      sand = weights[4];
+    const intensity =
+      ((snow * 0.8 + ash * 0.35 + sand * 0.32) * (1 - shadow) + shadow * 0.65) * (1 - seaWeight) +
+      sea.rain * seaWeight;
+    this.uniforms.intensity.value +=
+      (intensity * (1 - cave) - this.uniforms.intensity.value) * alpha;
+    this.particles.visible = this.uniforms.intensity.value > 0.01;
+    this.uniforms.time.value = time;
+    this.uniforms.centre.value.set(position.x, position.y, position.z);
+    this.uniforms.kind.value = sea.rain * seaWeight > 0.5 ? 2 : snow > 0.45 && shadow < 0.5 ? 0 : 1;
+    this.uniforms.pixelScale.value = world.renderer.getPixelRatio();
+    this.uniforms.color.value.set(
+      sea.rain * seaWeight > 0.5
+        ? '#c5e1eb'
+        : shadow > 0.5
+          ? '#b6a1ff'
+          : snow > 0.45
+            ? '#eaf2ff'
+            : ash > 0.45
+              ? '#d39b7b'
+              : '#e2c799',
+    );
+    world.canvas.dataset.biome = biome.id;
+    world.canvas.dataset.weather = biome.weather;
+    world.canvas.dataset.seaWeather = seaWeight > 0.5 ? weather.kind : '';
+    world.canvas.dataset.seaFog = world.scene.fog.far.toFixed(1);
+    world.canvas.dataset.adventureRegion = region?.id ?? '';
+    world.canvas.dataset.caveDarkness = cave.toFixed(3);
+  }
+  dispose() {
+    this.world.scene.remove(this.particles);
+    this.particles.geometry.dispose();
+    this.particles.material.dispose();
+  }
+}

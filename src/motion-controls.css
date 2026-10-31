@@ -1,0 +1,484 @@
+#motion-controls {
+  position: absolute;
+  z-index: 25;
+  left: 16px;
+  top: 122px;
+  width: min(318px, calc(100% - 32px));
+  pointer-events: auto;
+  color: #f5f2e7;
+  font:
+    14px/1.5 system-ui,
+    sans-serif;
+}
+body:not(.in-game) #motion-controls,
+#motion-controls [hidden] {
+  display: none !important;
+}
+#motion-controls[data-panel='setup'],
+#motion-controls[data-panel='help'] {
+  width: min(380px, calc(100% - 32px));
+}
+#motion-controls button,
+#motion-controls select {
+  font: inherit;
+  color: inherit;
+  background: #233e34;
+  border: 1px solid #718b7d;
+  border-radius: 10px;
+  min-height: 44px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+#motion-controls button:hover {
+  background: #355c4b;
+}
+#motion-controls :is(button, select, summary, input):focus-visible {
+  outline: 3px solid #f1d28b;
+  outline-offset: 2px;
+}
+#motion-controls button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+#motion-controls p {
+  margin: 8px 0;
+}
+.motion-toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+#motion-quick-stop {
+  margin-left: auto;
+}
+#motion-panel,
+#motion-hud {
+  margin-top: 8px;
+  padding: 16px;
+  border: 1px solid #77897c;
+  border-radius: 16px;
+  background: #142b23f5;
+  box-shadow: 0 8px 26px #0004;
+}
+#motion-panel {
+  max-height: calc(100dvh - 196px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.motion-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+.motion-heading strong {
+  font-size: 18px;
+}
+#motion-fold {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.motion-hud-caption {
+  display: flex;
+  justify-content: space-between;
+  color: #c4d8c9;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+}
+.motion-hud-caption span:last-child {
+  color: #95ddbc;
+}
+.motion-current {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 55px;
+}
+.motion-current strong {
+  font-size: 18px;
+  line-height: 1.4;
+}
+#motion-direction {
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  height: 34px;
+  color: #a9efd0;
+  font-size: 28px;
+}
+#motion-controls .motion-stop-hint {
+  font-size: 12px;
+  color: #e8d9ac;
+  padding: 8px 0;
+  border-top: 1px solid #ffffff21;
+}
+#motion-live-notice {
+  font-size: 12px;
+  color: #ffd88d;
+}
+.motion-action-glance {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  margin-top: 6px;
+}
+.motion-action-glance > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 8px;
+  padding: 3px 0 5px;
+}
+.motion-action-glance span {
+  font-size: 10px;
+  white-space: nowrap;
+}
+.motion-action-glance .motion-gesture {
+  width: 45px;
+  height: 37px;
+}
+.motion-action-glance .is-current {
+  background: #42664e;
+  color: #c5ffe0;
+}
+.motion-gesture {
+  width: 70px;
+  height: 66px;
+  fill: #bddbc522;
+  stroke: #c5e8d0;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.motion-gesture .motion-arrow {
+  fill: none;
+  stroke: #eed89b;
+  stroke-width: 2.7;
+}
+#motion-interaction-target {
+  font-size: 12px;
+  color: #a9efd0;
+  padding-top: 6px;
+  border-top: 1px solid #ffffff21;
+}
+.motion-steps {
+  display: flex;
+  gap: 8px;
+  margin: 18px 0 12px;
+  font-size: 11px;
+  color: #a9bcb0;
+}
+.motion-steps span {
+  padding: 5px 9px;
+  border-radius: 20px;
+  background: #ffffff08;
+}
+.motion-steps .is-current {
+  color: #c3f5d7;
+  background: #456c514f;
+  border: 1px solid #779b7c;
+}
+#motion-controls #motion-status {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.5;
+  margin: 12px 0 4px;
+}
+#motion-setup-hint {
+  font-size: 13px;
+  color: #c9d4c9;
+}
+.motion-preview {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  margin: 14px 0 10px;
+  border-radius: 12px;
+  background: #0a1510;
+  overflow: hidden;
+}
+.motion-preview video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scaleX(-1);
+}
+.motion-preview svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+#motion-guide {
+  fill: none;
+  stroke: #f3dd9999;
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+}
+#motion-skeleton {
+  fill: none;
+  stroke: #55f3bb;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+#motion-skeleton circle {
+  fill: #55f3bb;
+  stroke: #11251e;
+  stroke-width: 1.5;
+}
+#motion-skeleton text {
+  fill: #fff;
+  stroke: #07110c;
+  stroke-width: 3;
+  paint-order: stroke;
+  font-weight: 700;
+}
+#motion-preview-placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  text-align: center;
+  background: #0c1512e8;
+  color: #c9d4c9;
+}
+#motion-controls progress {
+  width: 100%;
+  height: 6px;
+  accent-color: #9ad9b0;
+}
+.motion-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+.motion-lesson-tabs {
+  display: flex;
+  gap: 6px;
+  margin: 14px 0;
+}
+#motion-controls .motion-lesson-tabs button {
+  flex: 1;
+  font-size: 12px;
+  padding: 8px 5px;
+}
+#motion-controls .motion-lesson-tabs [aria-pressed='true'] {
+  background: #426c52;
+  border-color: #b1d9b7;
+}
+.motion-lesson-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.motion-lesson-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 3px;
+  border: 1px solid #587760;
+  background: #ffffff05;
+  border-radius: 10px;
+  text-align: center;
+}
+.motion-lesson-card span {
+  font-size: 10px;
+  color: #c9d4c9;
+  margin: 8px 0 4px;
+}
+.motion-lesson-card strong {
+  font-size: 13px;
+}
+.motion-help-note {
+  font-size: 12px;
+  color: #c9d4c9;
+}
+#motion-settings {
+  border-top: 1px solid #ffffff26;
+  margin-top: 14px;
+}
+#motion-controls summary {
+  cursor: pointer;
+  padding: 12px 0;
+  font-size: 12px;
+  color: #c9d4c9;
+}
+.motion-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 10px 0;
+}
+.motion-option select {
+  max-width: 65%;
+  min-width: 0;
+}
+#motion-controls small {
+  display: block;
+  font-size: 11px;
+  color: #becbbe;
+  margin: 8px 0;
+}
+#motion-action-feedback {
+  padding: 12px 16px;
+  border: 1px solid #98c8a1;
+  border-radius: 12px;
+  background: #204d39;
+}
+#motion-action-feedback[data-accepted='false'] {
+  background: #493b24;
+  border-color: #d2b371;
+}
+/* Diagnostics stay within the explicitly opened troubleshooting section. */
+.motion-debug-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.motion-debug-toolbar label {
+  cursor: pointer;
+}
+#motion-controls [data-quality='tracked'] {
+  color: #a2edc5;
+}
+#motion-controls [data-quality='missing'] {
+  color: #eed19a;
+}
+.motion-pads,
+#motion-debug {
+  display: grid;
+  gap: 10px;
+  font-size: 11px;
+  margin-top: 12px;
+}
+.motion-hand-card {
+  border: 1px solid #577567;
+  border-radius: 8px;
+  padding: 10px;
+}
+.motion-hand-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 5px;
+}
+.motion-push {
+  margin-top: 8px;
+}
+.motion-pad {
+  position: relative;
+  height: 88px;
+  margin-top: 6px;
+  background: #20372f;
+  border-radius: 8px;
+}
+.motion-pad span {
+  position: absolute;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+.motion-up {
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.motion-down {
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.motion-left {
+  left: 4px;
+  top: 45%;
+}
+.motion-right {
+  right: 4px;
+  top: 45%;
+}
+.motion-home,
+.motion-dot {
+  position: absolute;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+.motion-home {
+  border: 1px dashed #d2c48f;
+  width: 25px;
+  height: 25px;
+  left: 50%;
+  top: 50%;
+}
+.motion-dot {
+  width: 11px;
+  height: 11px;
+  border: 2px solid #fff;
+  background: #53e5ce;
+}
+.motion-selected {
+  color: #102b22;
+  background: #94edc7;
+}
+.motion-hand-state {
+  margin-top: 5px;
+}
+.motion-modes {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+}
+#motion-fingers,
+#motion-debug-required {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+#motion-fingers span {
+  white-space: pre-line;
+  padding: 4px;
+  border: 1px solid #52685c;
+  border-radius: 5px;
+}
+#motion-controls.motion-expanded[data-panel='help'] {
+  width: min(600px, calc(100% - 32px));
+}
+@media (max-width: 760px), (max-height: 600px) {
+  #motion-controls {
+    left: 8px;
+    top: 98px;
+    width: min(258px, calc(100% - 16px));
+  }
+  #motion-controls[data-panel='setup'],
+  #motion-controls[data-panel='help'] {
+    width: min(366px, calc(100% - 16px));
+  }
+  #motion-panel {
+    max-height: calc(100dvh - 164px);
+    padding: 14px;
+  }
+  #motion-hud {
+    padding: 12px;
+  }
+  .motion-current strong {
+    font-size: 16px;
+  }
+  .motion-action-glance span {
+    font-size: 9px;
+  }
+  .motion-current {
+    gap: 6px;
+  }
+}
+@media (max-height: 500px) {
+  .motion-action-glance,
+  #motion-action-caption {
+    display: none;
+  }
+  .motion-preview {
+    max-height: 130px;
+  }
+}

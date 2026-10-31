@@ -1,0 +1,185 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { keyPrompts } from '../dist/src/screens.js';
+
+const root = new URL('../', import.meta.url);
+// Since r11 the HUD writes `hidden` through hud-dom's setFlag, which leaves exactly the DOM of
+// `element.hidden = value` (tests/hud-dom.test.mjs); a local helper must not shadow it.
+const HUD_FLAG_IMPORT = /import \{[^}]*\bsetFlag\b[^}]*\} from '\.\/hud-dom\.js';/;
+
+test('the HUD omits menu prompts and never repeats a contextual button', async () => {
+  assert.deepEqual(keyPrompts(false), []);
+  assert.deepEqual(keyPrompts(true), []);
+  assert.deepEqual(keyPrompts(false, true), [{ key: 'SHARE / タッチパッド', label: '地図' }]);
+  // 2026-09-21: riding and boarding are announced once, by their own key-labelled button.
+  const main = await readFile(new URL('src/main.ts', root), 'utf8');
+  const boat = await readFile(new URL('src/boat-ui.ts', root), 'utf8');
+  assert.doesNotMatch(main + boat, /を押すと(マンモス|船)に乗れます/);
+  assert.doesNotMatch(main + boat, /[R×B] ?で(降りる|降ろす|肩に乗る)|岸で [B×]/);
+  assert.match(main, HUD_FLAG_IMPORT);
+  assert.doesNotMatch(main, /function setFlag\b/);
+  assert.match(main, /setFlag\(\$\('#riding-hint'\), 'hidden', !ridingHint\)/);
+  assert.match(boat, /\$\('#boat-hint'\)\.hidden = !hint/);
+});
+
+test('manuals have no title, menu, or keyboard entry point', async () => {
+  const main = await readFile(new URL('src/main.ts', root), 'utf8');
+  const screens = await readFile(new URL('src/screens.ts', root), 'utf8');
+  const css = await readFile(new URL('src/style.css', root), 'utf8');
+  assert.doesNotMatch(main, /screen-guide|guideMarkup|cro-skip-guide|showGuide|finishGuide/);
+  assert.doesNotMatch(screens, /guideMarkup|'guide'/);
+  assert.doesNotMatch(css, /\.guide-/);
+  assert.doesNotMatch(main, /openHelp|helpMarkup|help-content|title-howto|操作説明|あそびかた/);
+  assert.match(main, /new InputCues/);
+  assert.doesNotMatch(css, /\.help-/);
+});
+
+test('the interaction hint is a hidden text line that only names a real nearby action', async () => {
+  const main = await readFile(new URL('src/main.ts', root), 'utf8');
+  assert.match(main, /id="interaction-hint" hidden><kbd>E<\/kbd><span><\/span>/);
+  assert.doesNotMatch(main, /近くのものを調べる/);
+  // Hidden exactly when nearby() finds no real action, labelled with that action; the one writer.
+  assert.match(main, HUD_FLAG_IMPORT);
+  assert.doesNotMatch(main, /function setFlag\b/);
+  assert.match(
+    main,
+    /const target = nearby\(\);\s*setFlag\(\$\('#interaction-hint'\), 'hidden', !target\);\s*setText\(\$\('#interaction-hint span'\), target\?\.label \?\? ''\);/,
+  );
+  assert.equal(main.match(/#interaction-hint'\), 'hidden'/g)?.length, 1);
+  assert.doesNotMatch(main, /\$\('#interaction-hint'\)\.hidden =/);
+  assert.match(main, /range: gatherRange\(me\)/);
+  assert.match(main, /renderer\.resourceVisible\?\.\(r\.id\)/);
+});
+
+test('the mage recharge is a continuous bar without a numbered countdown', async () => {
+  const main = await readFile(new URL('src/main.ts', root), 'utf8');
+  const css = await readFile(new URL('src/style.css', root), 'utf8');
+  assert.match(main, /id="magic-cooldown-progress"/);
+  assert.match(main, /magicCooldownProgress\.value = metered \? cooldownLeft : 0/);
+  assert.doesNotMatch(main, /魔法 あと|Math\.ceil\(cooldownLeft/);
+  assert.match(css, /#magic-cooldown progress/);
+});
+
+test('pause tab and action focus stays inside the scrollport for keyboard and controller navigation', async () => {
+  const css = await readFile(new URL('src/style.css', root), 'utf8');
+  // The actions after the tabs share the row's scrollport, so they share the inset ring.
+  const rule = css.match(
+    /\.pause-tab\.gamepad-focus,\s*\.pause-tab:focus-visible,\s*\.pause-exits \.button\.gamepad-focus,\s*\.pause-exits \.button:focus-visible\s*\{([^}]+)\}/,
+  )?.[1];
+  assert.ok(rule, 'both input devices share the focus rule of the tabs and the actions');
+  assert.match(rule, /outline: 3px solid #[\da-f]+ !important/);
+  assert.match(rule, /outline-offset: -3px !important/);
+  assert.match(
+    rule,
+    /box-shadow: none !important/,
+    'the global outside controller halo must not leak back in',
+  );
+});
+
+test('the map button, M and SHARE toggle the atlas closed when it is already open', async () => {
+  const main = await readFile(new URL('src/main.ts', root), 'utf8');
+  assert.match(
+    main,
+    /function openMap\(\) \{\s*if \(\$\('#modal'\)\.open && \$\('#big-map'\)\) \{\s*\$\('#modal'\)\.close\(\);/,
+  );
+  assert.match(main, /\$\('#map-button'\)\.onclick = openMap/);
+  assert.match(main, /if \(k === 'm'\) openMap\(\)/);
+  assert.match(main, /case 'map':\s*openMap\(\)/);
+  assert.match(main, /frame\.actions\.includes\('map'\) \? openMap\(\)/);
+});
+
+test('the game opens on a title screen and only joins after Start or ?autostart=1', async () => {
+  const main = await readFile(new URL('src/main.ts', root), 'utf8');
+  const shell = await readFile(new URL('src/title-shell.ts', root), 'utf8');
+  assert.match(shell, /id="screen-title"/);
+  assert.match(shell, /id="title-start"/);
+  assert.match(main, /id="setup-form"/);
+  assert.match(main, /query\.get\('autostart'\) === '1'/);
+  // resumeTitle shows the title (tests/title-shell.test.mjs runs its cases).
+  assert.match(main, /\} else resumeTitle\(titleHandoff\);\s*$/);
+  assert.doesNotMatch(main, /\nconnect\(\);\s*$/);
+  assert.doesNotMatch(main, /class="brand"/, 'no persistent web-app brand header');
+  assert.doesNotMatch(main, /data-panel=/, 'no top navigation dock');
+});
+
+test('setup chooses an outfit then a companion on a separate screen, with no confirmation or difficulty controls', async () => {
+  const main = await readFile(new URL('src/main.ts', root), 'utf8');
+  const flow = await readFile(new URL('src/setup-flow.ts', root), 'utf8');
+  const picker = await readFile(new URL('src/character-choice-ui.ts', root), 'utf8');
+  const css = await readFile(new URL('src/style.css', root), 'utf8');
+  assert.match(main, /bindSetupFlow\(\{/);
+  assert.doesNotMatch(
+    main,
+    /difficultySettingsMarkup|data-difficulty|type: 'difficulty'|cro-difficulty/,
+  );
+  assert.match(main, /difficulty: FIXED_DIFFICULTY/);
+  assert.doesNotMatch(main, /敵の動きと攻撃時間は(?:仲間)?全員で共通です/);
+  assert.doesNotMatch(main, /setup-submit|この谷へ出発する|difficultyChoicesMarkup/);
+  assert.doesNotMatch(flow, /難易度|difficulty|data-choose-difficulty/);
+  assert.doesNotMatch(flow, /これでいいですか|setup-flow-no|step === 'confirm'/);
+  assert.match(
+    main,
+    /characterPickerMarkup\(\s*fixedIdentity \? null : profile.dye,\s*'setup-flow-yes',/,
+  );
+  assert.match(picker, /label = 'これにする'/);
+  assert.match(main, /id="screen-mascot"/);
+  assert.match(main, /id="mascot-start"[^>]+>これにする<\/button>/);
+  assert.match(main, /dye: pickedCharacterChoice\(form\).dye \?\? profile.dye/);
+  assert.doesNotMatch(css, /\.setup-flow-choices|\.setup-flow-summary/);
+  assert.doesNotMatch(css, /\.difficulty-choice-grid|\.setup-launch/);
+});
+
+test('the atlas is a full-bleed canvas with a pointer, the 名所 photos, a small card and zoom controls, without a toolbar or fire list', async () => {
+  const { mapScreen, mapEmptyPrompt } = await import('../dist/src/map-screen.js');
+  const { SPAWN_SITES } = await import('../dist/shared/spawn-sites.mjs');
+  const html = mapScreen((name) => `<i class="icon-${name}"></i>`);
+  // Fast travel to the pictured sights moved here from the menu; the exhibition keeps its tab.
+  assert.match(html, /名所へワープ/);
+  assert.deepEqual(
+    [...html.matchAll(/data-map-place="([^"]+)"/g)].map((match) => match[1]),
+    SPAWN_SITES.map((site) => `spawn-${site.id}`),
+  );
+  for (const site of SPAWN_SITES) assert.match(html, new RegExp(`src="/spawn/${site.id}.jpg"`));
+  assert.doesNotMatch(
+    mapScreen(() => '', true),
+    /data-map-place|名所/,
+  );
+  for (const id of [
+    'big-map',
+    'warp-map-points',
+    'map-self',
+    'map-cursor',
+    'map-card',
+    'map-region',
+    'map-destination',
+    'map-selection',
+    'map-warp',
+    'map-warp-status',
+    'map-pin-send',
+    'map-pin-clear',
+    'map-pin-status',
+    'map-zoom-in',
+    'map-zoom-level',
+    'map-zoom-out',
+    'map-center',
+  ])
+    assert.match(html, new RegExp(`id="${id}"`), id);
+  assert.match(html, new RegExp(mapEmptyPrompt()));
+  assert.match(html, /id="map-warp"[^>]*>ワープ<\/button>/);
+  assert.match(html, /id="map-center"[^>]*>現在地へ<\/button>/);
+  assert.doesNotMatch(html, /<kbd>|ポインタを合わせて/);
+  for (const removed of [
+    'earth-map-toolbar',
+    'map-overview',
+    'map-gulf',
+    'map-local',
+    'map-details',
+    'map-pin-center',
+    'map-list',
+    'map-clusters',
+    'data-map-pan',
+    'earth-travel',
+  ])
+    assert.doesNotMatch(html, new RegExp(removed), `${removed} is gone`);
+});

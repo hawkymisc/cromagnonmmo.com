@@ -1,0 +1,2003 @@
+{
+  "groups": {
+    "people": {
+      "files": [
+        {
+          "path": "public/models/fairy-mascot/lod-r01.glb"
+        },
+        {
+          "path": "public/models/fairy-mascot/model-r01.glb"
+        },
+        {
+          "path": "public/models/fairy-mascot/portrait.png"
+        },
+        {
+          "path": "public/models/howkey-flask/model-r01.glb"
+        },
+        {
+          "path": "public/models/howkey-flask/portrait.png"
+        },
+        {
+          "path": "public/models/howkey-scientist/lod-c2.glb"
+        },
+        {
+          "path": "public/models/howkey-scientist/lod-performance.glb"
+        },
+        {
+          "path": "public/models/howkey-scientist/model-c2.glb"
+        },
+        {
+          "path": "public/models/howkey-scientist/model-r11.glb"
+        },
+        {
+          "path": "public/models/howkey-scientist/portrait.png"
+        },
+        {
+          "path": "public/models/kohaku/lod-c2.glb"
+        },
+        {
+          "path": "public/models/kohaku/model-c2.glb"
+        },
+        {
+          "path": "public/models/kohaku/model-r05.glb"
+        },
+        {
+          "path": "public/models/kohaku/portrait-r05.png"
+        },
+        {
+          "path": "public/models/mae/lod-c2.glb"
+        },
+        {
+          "path": "public/models/mae/model-c2.glb"
+        },
+        {
+          "path": "public/models/mae/model-r01.glb"
+        },
+        {
+          "path": "public/models/mae/portrait.png"
+        },
+        {
+          "path": "public/models/maruimo-mascot/lod-c2.glb"
+        },
+        {
+          "path": "public/models/maruimo-mascot/model-c2.glb"
+        },
+        {
+          "path": "public/models/maruimo-mascot/model-r01.glb"
+        },
+        {
+          "path": "public/models/maruimo-mascot/portrait.png"
+        },
+        {
+          "path": "public/models/maruimo-octopus/lod-c2.glb"
+        },
+        {
+          "path": "public/models/maruimo-octopus/model-c2.glb"
+        },
+        {
+          "path": "public/models/maruimo-octopus/model-r10.glb"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portrait.png"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r02-blue.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r02-green.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r02-original.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r02-pink.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r02-purple.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r02-red.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r02-teal.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r02-white.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r02-yellow.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r03-blue.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r03-green.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r03-original.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r03-pink.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r03-purple.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r03-red.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r03-teal.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r03-white.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r03-yellow.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r04-blue.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r04-green.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r04-original.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r04-pink.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r04-purple.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r04-red.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r04-teal.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r04-white.webp"
+        },
+        {
+          "path": "public/models/maruimo-octopus/portraits/choice-r04-yellow.webp"
+        },
+        {
+          "path": "public/models/nukonuko-mascot/lod-r02.glb"
+        },
+        {
+          "path": "public/models/nukonuko-mascot/model-r02.glb"
+        },
+        {
+          "path": "public/models/nukonuko-mascot/portrait.png"
+        },
+        {
+          "path": "public/models/otani-mascot/lod-r02.glb"
+        },
+        {
+          "path": "public/models/otani-mascot/model-r02.glb"
+        },
+        {
+          "path": "public/models/otani-mascot/portrait.png"
+        },
+        {
+          "path": "public/models/rei-mascot/lod-r01.glb"
+        },
+        {
+          "path": "public/models/rei-mascot/model-r01.glb"
+        },
+        {
+          "path": "public/models/rei-mascot/portrait.png"
+        },
+        {
+          "path": "public/models/saber-mascot/lod-r01.glb"
+        },
+        {
+          "path": "public/models/saber-mascot/model-r01.glb"
+        },
+        {
+          "path": "public/models/saber-mascot/portrait.png"
+        },
+        {
+          "path": "public/models/sagasa-mascot/lod-r03.glb"
+        },
+        {
+          "path": "public/models/sagasa-mascot/model-r03.glb"
+        },
+        {
+          "path": "public/models/sagasa-mascot/portrait.png"
+        },
+        {
+          "path": "public/models/urata-mascot/lod-r02.glb"
+        },
+        {
+          "path": "public/models/urata-mascot/model-r02.glb"
+        },
+        {
+          "path": "public/models/urata-mascot/portrait.png"
+        }
+      ]
+    },
+    "dormant": {
+      "files": [
+        {
+          "path": "public/models/cat-kunoichi/lod-c2.glb"
+        },
+        {
+          "path": "public/models/cat-kunoichi/model-c2.glb"
+        },
+        {
+          "path": "public/models/cat-kunoichi/model-downed-r01.glb"
+        },
+        {
+          "path": "public/models/cat-kunoichi/model-gaits-r02.glb"
+        },
+        {
+          "path": "public/models/cat-kunoichi/model-human-r10.glb"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portrait.png"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r02-blue.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r02-green.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r02-original.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r02-pink.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r02-purple.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r02-red.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r02-teal.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r02-white.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r02-yellow.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r03-blue.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r03-green.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r03-original.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r03-pink.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r03-purple.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r03-red.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r03-teal.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r03-white.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r03-yellow.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r04-blue.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r04-green.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r04-original.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r04-pink.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r04-purple.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r04-red.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r04-teal.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r04-white.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/portraits/choice-r04-yellow.webp"
+        },
+        {
+          "path": "public/models/cat-kunoichi/startup.opt-ca2213d32f027f41.glb"
+        },
+        {
+          "path": "public/models/kunoichi-katana/model-c2.glb"
+        },
+        {
+          "path": "public/models/kunoichi-katana/model-c2.opt-0b7db07e795f0ac3.glb"
+        },
+        {
+          "path": "public/models/kunoichi-katana/model-c2.opt-4f74268d2afc061d.glb"
+        },
+        {
+          "path": "public/models/kunoichi-katana/model-c2.opt-624f6bbc73dc6fde.glb"
+        },
+        {
+          "path": "public/models/kunoichi-katana/model.glb"
+        },
+        {
+          "path": "public/models/neanderthal-hunter/lod-c2.glb"
+        },
+        {
+          "path": "public/models/neanderthal-hunter/lod-face-r01.glb"
+        },
+        {
+          "path": "public/models/neanderthal-hunter/model-c2.glb"
+        },
+        {
+          "path": "public/models/neanderthal-hunter/model-downed-r01.glb"
+        },
+        {
+          "path": "public/models/neanderthal-hunter/model-face-lp-r08.glb"
+        },
+        {
+          "path": "public/models/neanderthal-hunter/model-face-r01.glb"
+        },
+        {
+          "path": "public/models/neanderthal-hunter/model-human-r10.glb"
+        },
+        {
+          "path": "public/models/neanderthal-hunter/model-thrust-r02.glb"
+        },
+        {
+          "path": "public/models/neanderthal-hunter/portrait.png"
+        },
+        {
+          "path": "public/models/neanderthal-hunter/startup.opt-ef3e3fa2f2931daf.glb"
+        },
+        {
+          "path": "public/models/neanderthal-woman/lod-c2.glb"
+        },
+        {
+          "path": "public/models/neanderthal-woman/lod-face-r01.glb"
+        },
+        {
+          "path": "public/models/neanderthal-woman/model-c2.glb"
+        },
+        {
+          "path": "public/models/neanderthal-woman/model-downed-r01.glb"
+        },
+        {
+          "path": "public/models/neanderthal-woman/model-face-lp-r08.glb"
+        },
+        {
+          "path": "public/models/neanderthal-woman/model-face-r01.glb"
+        },
+        {
+          "path": "public/models/neanderthal-woman/model-face-r10.glb"
+        },
+        {
+          "path": "public/models/neanderthal-woman/model-gaits-r02.glb"
+        },
+        {
+          "path": "public/models/neanderthal-woman/model-human-r10.glb"
+        },
+        {
+          "path": "public/models/neanderthal-woman/model-motion-r04.glb"
+        },
+        {
+          "path": "public/models/neanderthal-woman/model-run-r05.glb"
+        },
+        {
+          "path": "public/models/neanderthal-woman/model-thrust-r02.glb"
+        },
+        {
+          "path": "public/models/neanderthal-woman/portrait.png"
+        },
+        {
+          "path": "public/models/neanderthal-woman/startup.opt-caf50f3f8aa971be.glb"
+        },
+        {
+          "path": "public/models/neanderthal-woman/startup.opt-fabb21a67061a199.glb"
+        }
+      ]
+    },
+    "unused": {
+      "files": [
+        {
+          "path": "assets/favicon/20261016-chibi-r01/favicon.svg"
+        },
+        {
+          "path": "assets/favicon/20261016-chibi-r01/previous/favicon.svg"
+        },
+        {
+          "path": "output/playwright/optimization-20261009/lod-gameplay-review-r01/violet-behemoth-28m-high.png"
+        },
+        {
+          "path": "output/playwright/optimization-20261009/lod-gameplay-review-r01/violet-behemoth-28m-runtime.png"
+        },
+        {
+          "path": "public/models/bear-mage/model.glb"
+        },
+        {
+          "path": "public/models/berry-bush/model-c2.glb"
+        },
+        {
+          "path": "public/models/berry-bush/model-c2.opt-8b9da70146d6f3c7.glb"
+        },
+        {
+          "path": "public/models/berry-bush/model.glb"
+        },
+        {
+          "path": "public/models/berry-cluster/model-c2.glb"
+        },
+        {
+          "path": "public/models/berry-cluster/model-c2.opt-88ed3b12e7713e6f.glb"
+        },
+        {
+          "path": "public/models/camp-cave/524-lascaux-frieze-r32.opt-2f9a4a74cb9c0e9d.png"
+        },
+        {
+          "path": "public/models/camp-cave/524-lascaux-frieze-r32.opt-78de0e1c4a23835d.png"
+        },
+        {
+          "path": "public/models/camp-cave/524-lascaux-frieze-r32.png"
+        },
+        {
+          "path": "public/models/camp-cave/bot-round-lascaux-r31.opt-9dc5292302335e65.png"
+        },
+        {
+          "path": "public/models/camp-cave/bot-round-lascaux-r31.png"
+        },
+        {
+          "path": "public/models/camp-cave/bot-shapes-lascaux-r31.opt-86a06da8e6789d84.png"
+        },
+        {
+          "path": "public/models/camp-cave/bot-shapes-lascaux-r31.opt-b6ee4b02e4be9c02.png"
+        },
+        {
+          "path": "public/models/camp-cave/bot-shapes-lascaux-r31.png"
+        },
+        {
+          "path": "public/models/camp-cave/daredaro-lascaux-r37.png"
+        },
+        {
+          "path": "public/models/camp-cave/friends-meadow-lascaux-r34.opt-d730fdda31b98b8b.png"
+        },
+        {
+          "path": "public/models/camp-cave/friends-meadow-lascaux-r34.opt-e6153063bca167d1.png"
+        },
+        {
+          "path": "public/models/camp-cave/friends-meadow-lascaux-r34.png"
+        },
+        {
+          "path": "public/models/camp-cave/friends-river-lascaux-r35.opt-62aa0628be8c4b05.png"
+        },
+        {
+          "path": "public/models/camp-cave/friends-river-lascaux-r35.opt-7eb5d96e7f0afd5a.png"
+        },
+        {
+          "path": "public/models/camp-cave/friends-river-lascaux-r35.png"
+        },
+        {
+          "path": "public/models/camp-cave/limestone-r05.opt-61e9536d1415d066.png"
+        },
+        {
+          "path": "public/models/camp-cave/limestone-r05.png"
+        },
+        {
+          "path": "public/models/camp-cave/mae-kohaku-lascaux-r31.opt-a9fee23d61be6387.png"
+        },
+        {
+          "path": "public/models/camp-cave/mae-kohaku-lascaux-r31.opt-b265fa99d4bf3980.png"
+        },
+        {
+          "path": "public/models/camp-cave/mae-kohaku-lascaux-r31.png"
+        },
+        {
+          "path": "public/models/camp-cave/maruimo-lascaux-r33.opt-60597acdd04df58d.png"
+        },
+        {
+          "path": "public/models/camp-cave/maruimo-lascaux-r33.opt-cf90962462cefa64.png"
+        },
+        {
+          "path": "public/models/camp-cave/maruimo-lascaux-r33.png"
+        },
+        {
+          "path": "public/models/camp-cave/model-r07.glb"
+        },
+        {
+          "path": "public/models/camp-cave/model-r26.glb"
+        },
+        {
+          "path": "public/models/camp-cave/model-r26.opt-1debf5dafc216ce0.glb"
+        },
+        {
+          "path": "public/models/camp-cave/model-r27-rounded.glb"
+        },
+        {
+          "path": "public/models/camp-cave/mural-atlas-r05.png"
+        },
+        {
+          "path": "public/models/camp-cave/mural-side-r04.png"
+        },
+        {
+          "path": "public/models/camp-cave/mural.png"
+        },
+        {
+          "path": "public/models/camp-cave/rimo-lascaux-frieze-r30.opt-65fa961cf8b88827.png"
+        },
+        {
+          "path": "public/models/camp-cave/rimo-lascaux-frieze-r30.opt-8a2acbfbfaa6d2c2.png"
+        },
+        {
+          "path": "public/models/camp-cave/rimo-lascaux-frieze-r30.png"
+        },
+        {
+          "path": "public/models/camp-cave/ryuichi-lascaux-r38.png"
+        },
+        {
+          "path": "public/models/camp-mountain/lod-performance.glb"
+        },
+        {
+          "path": "public/models/camp-mountain/lod-performance.opt-4d25b780075a2bbe.glb"
+        },
+        {
+          "path": "public/models/camp-mountain/model-r11.glb"
+        },
+        {
+          "path": "public/models/camp-mountain/model-r15.glb"
+        },
+        {
+          "path": "public/models/camp-mountain/model-r15.opt-ee6b106610ff88a4.glb"
+        },
+        {
+          "path": "public/models/cockle-shell/model-c2.glb"
+        },
+        {
+          "path": "public/models/cockle-shell/model-c2.opt-16d1634c87d7806d.glb"
+        },
+        {
+          "path": "public/models/cockle-shell/model-c2.opt-b6f8856977543650.glb"
+        },
+        {
+          "path": "public/models/cockle-shell/model.glb"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-braid/portraits/choice-r02-blue.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-braid/portraits/choice-r02-green.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-braid/portraits/choice-r02-original.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-braid/portraits/choice-r02-pink.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-braid/portraits/choice-r02-purple.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-braid/portraits/choice-r02-red.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-braid/portraits/choice-r02-teal.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-braid/portraits/choice-r02-white.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-braid/portraits/choice-r02-yellow.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-braid/portraits/choice-r03-blue.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-braid/portraits/choice-r03-green.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-braid/portraits/choice-r03-original.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-braid/portraits/choice-r03-pink.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-braid/portraits/choice-r03-purple.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-braid/portraits/choice-r03-red.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-braid/portraits/choice-r03-teal.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-braid/portraits/choice-r03-white.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-braid/portraits/choice-r03-yellow.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-headband/portraits/choice-r02-blue.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-headband/portraits/choice-r02-green.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-headband/portraits/choice-r02-original.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-headband/portraits/choice-r02-pink.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-headband/portraits/choice-r02-purple.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-headband/portraits/choice-r02-red.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-headband/portraits/choice-r02-teal.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-headband/portraits/choice-r02-white.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-headband/portraits/choice-r02-yellow.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-headband/portraits/choice-r03-blue.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-headband/portraits/choice-r03-green.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-headband/portraits/choice-r03-original.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-headband/portraits/choice-r03-pink.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-headband/portraits/choice-r03-purple.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-headband/portraits/choice-r03-red.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-headband/portraits/choice-r03-teal.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-headband/portraits/choice-r03-white.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-headband/portraits/choice-r03-yellow.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-lion/portraits/choice-r02-blue.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-lion/portraits/choice-r02-green.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-lion/portraits/choice-r02-original.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-lion/portraits/choice-r02-pink.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-lion/portraits/choice-r02-purple.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-lion/portraits/choice-r02-red.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-lion/portraits/choice-r02-teal.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-lion/portraits/choice-r02-white.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-lion/portraits/choice-r02-yellow.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-lion/portraits/choice-r03-blue.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-lion/portraits/choice-r03-green.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-lion/portraits/choice-r03-original.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-lion/portraits/choice-r03-pink.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-lion/portraits/choice-r03-purple.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-lion/portraits/choice-r03-red.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-lion/portraits/choice-r03-teal.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-lion/portraits/choice-r03-white.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-lion/portraits/choice-r03-yellow.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-topknot/portraits/choice-r02-blue.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-topknot/portraits/choice-r02-green.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-topknot/portraits/choice-r02-original.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-topknot/portraits/choice-r02-pink.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-topknot/portraits/choice-r02-purple.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-topknot/portraits/choice-r02-red.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-topknot/portraits/choice-r02-teal.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-topknot/portraits/choice-r02-white.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-topknot/portraits/choice-r02-yellow.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-topknot/portraits/choice-r03-blue.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-topknot/portraits/choice-r03-green.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-topknot/portraits/choice-r03-original.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-topknot/portraits/choice-r03-pink.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-topknot/portraits/choice-r03-purple.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-topknot/portraits/choice-r03-red.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-topknot/portraits/choice-r03-teal.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-topknot/portraits/choice-r03-white.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-boy-topknot/portraits/choice-r03-yellow.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-bear/portraits/choice-r02-blue.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-bear/portraits/choice-r02-green.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-bear/portraits/choice-r02-original.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-bear/portraits/choice-r02-pink.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-bear/portraits/choice-r02-purple.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-bear/portraits/choice-r02-red.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-bear/portraits/choice-r02-teal.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-bear/portraits/choice-r02-white.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-bear/portraits/choice-r02-yellow.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-bear/portraits/choice-r03-blue.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-bear/portraits/choice-r03-green.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-bear/portraits/choice-r03-original.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-bear/portraits/choice-r03-pink.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-bear/portraits/choice-r03-purple.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-bear/portraits/choice-r03-red.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-bear/portraits/choice-r03-teal.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-bear/portraits/choice-r03-white.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-bear/portraits/choice-r03-yellow.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-feather/portraits/choice-r02-blue.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-feather/portraits/choice-r02-green.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-feather/portraits/choice-r02-original.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-feather/portraits/choice-r02-pink.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-feather/portraits/choice-r02-purple.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-feather/portraits/choice-r02-red.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-feather/portraits/choice-r02-teal.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-feather/portraits/choice-r02-white.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-feather/portraits/choice-r02-yellow.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-feather/portraits/choice-r03-blue.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-feather/portraits/choice-r03-green.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-feather/portraits/choice-r03-original.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-feather/portraits/choice-r03-pink.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-feather/portraits/choice-r03-purple.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-feather/portraits/choice-r03-red.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-feather/portraits/choice-r03-teal.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-feather/portraits/choice-r03-white.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-feather/portraits/choice-r03-yellow.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-reindeer/portraits/choice-r02-blue.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-reindeer/portraits/choice-r02-green.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-reindeer/portraits/choice-r02-original.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-reindeer/portraits/choice-r02-pink.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-reindeer/portraits/choice-r02-purple.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-reindeer/portraits/choice-r02-red.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-reindeer/portraits/choice-r02-teal.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-reindeer/portraits/choice-r02-white.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-reindeer/portraits/choice-r02-yellow.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-reindeer/portraits/choice-r03-blue.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-reindeer/portraits/choice-r03-green.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-reindeer/portraits/choice-r03-original.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-reindeer/portraits/choice-r03-pink.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-reindeer/portraits/choice-r03-purple.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-reindeer/portraits/choice-r03-red.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-reindeer/portraits/choice-r03-teal.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-reindeer/portraits/choice-r03-white.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-reindeer/portraits/choice-r03-yellow.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-twintails/portraits/choice-r02-blue.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-twintails/portraits/choice-r02-green.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-twintails/portraits/choice-r02-original.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-twintails/portraits/choice-r02-pink.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-twintails/portraits/choice-r02-purple.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-twintails/portraits/choice-r02-red.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-twintails/portraits/choice-r02-teal.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-twintails/portraits/choice-r02-white.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-twintails/portraits/choice-r02-yellow.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-twintails/portraits/choice-r03-blue.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-twintails/portraits/choice-r03-green.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-twintails/portraits/choice-r03-original.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-twintails/portraits/choice-r03-pink.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-twintails/portraits/choice-r03-purple.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-twintails/portraits/choice-r03-red.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-twintails/portraits/choice-r03-teal.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-twintails/portraits/choice-r03-white.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-twintails/portraits/choice-r03-yellow.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-wolf/portraits/choice-r02-blue.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-wolf/portraits/choice-r02-green.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-wolf/portraits/choice-r02-original.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-wolf/portraits/choice-r02-pink.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-wolf/portraits/choice-r02-purple.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-wolf/portraits/choice-r02-red.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-wolf/portraits/choice-r02-teal.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-wolf/portraits/choice-r02-white.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-wolf/portraits/choice-r02-yellow.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-wolf/portraits/choice-r03-blue.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-wolf/portraits/choice-r03-green.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-wolf/portraits/choice-r03-original.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-wolf/portraits/choice-r03-pink.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-wolf/portraits/choice-r03-purple.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-wolf/portraits/choice-r03-red.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-wolf/portraits/choice-r03-teal.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-wolf/portraits/choice-r03-white.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-girl-wolf/portraits/choice-r03-yellow.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/lod-c2.glb"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/lod-face-r01.glb"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/model-c2.glb"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/model-downed-r01.glb"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/model-face-r01.glb"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/model-human-r10.glb"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/model-thrust-r02.glb"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/portraits/choice-r02-blue.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/portraits/choice-r02-green.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/portraits/choice-r02-original.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/portraits/choice-r02-pink.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/portraits/choice-r02-purple.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/portraits/choice-r02-red.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/portraits/choice-r02-teal.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/portraits/choice-r02-white.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/portraits/choice-r02-yellow.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/portraits/choice-r03-blue.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/portraits/choice-r03-green.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/portraits/choice-r03-original.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/portraits/choice-r03-pink.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/portraits/choice-r03-purple.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/portraits/choice-r03-red.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/portraits/choice-r03-teal.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/portraits/choice-r03-white.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-hunter/portraits/choice-r03-yellow.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/lod-c2.glb"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/lod-face-r01.glb"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/model-c2.glb"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/model-downed-r01.glb"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/model-face-r01.glb"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/model-face-r10.glb"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/model-gaits-r02.glb"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/model-human-r10.glb"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/model-motion-r04.glb"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/model-run-r05.glb"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/model-thrust-r02.glb"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/portraits/choice-r02-blue.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/portraits/choice-r02-green.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/portraits/choice-r02-original.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/portraits/choice-r02-pink.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/portraits/choice-r02-purple.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/portraits/choice-r02-red.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/portraits/choice-r02-teal.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/portraits/choice-r02-white.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/portraits/choice-r02-yellow.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/portraits/choice-r03-blue.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/portraits/choice-r03-green.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/portraits/choice-r03-original.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/portraits/choice-r03-pink.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/portraits/choice-r03-purple.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/portraits/choice-r03-red.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/portraits/choice-r03-teal.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/portraits/choice-r03-white.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/portraits/choice-r03-yellow.webp"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/startup.opt-7d7616b26f06a2ac.glb"
+        },
+        {
+          "path": "public/models/cro-magnon-woman/startup.opt-f414686fe312f6e3.glb"
+        },
+        {
+          "path": "public/models/crow-bone-pauldrons/model-c2.glb"
+        },
+        {
+          "path": "public/models/crow-brute-axe/model-c2.glb"
+        },
+        {
+          "path": "public/models/crow-brute-axe/model-c2.opt-c0bb141f6955dc0e.glb"
+        },
+        {
+          "path": "public/models/crow-hide-shield/model-c2.glb"
+        },
+        {
+          "path": "public/models/crow-ivory-vestment/model-c2.glb"
+        },
+        {
+          "path": "public/models/crow-pontiff-crown/model-c2.glb"
+        },
+        {
+          "path": "public/models/crow-pontiff-crown/model-c2.opt-2d08c7f7cbcd36ae.glb"
+        },
+        {
+          "path": "public/models/crow-pontiff-crozier/model-c2.glb"
+        },
+        {
+          "path": "public/models/crow-pontiff-crozier/model-c2.opt-93eab7263c91dde9.glb"
+        },
+        {
+          "path": "public/models/crow-prelate-glaive/model-c2.glb"
+        },
+        {
+          "path": "public/models/crow-prelate-glaive/model-c2.opt-142517a572596582.glb"
+        },
+        {
+          "path": "public/models/crow-red-mantle/model-c2.glb"
+        },
+        {
+          "path": "public/models/crow-shaman/lod-c2.glb"
+        },
+        {
+          "path": "public/models/crow-shaman/model-c2.glb"
+        },
+        {
+          "path": "public/models/crow-shaman/model-motion-r04.glb"
+        },
+        {
+          "path": "public/models/crow-soldier-spear/model-c2.glb"
+        },
+        {
+          "path": "public/models/crow-soldier-spear/model-c2.opt-79e6dcb333d1b232.glb"
+        },
+        {
+          "path": "public/models/desert-cactus/lod-c2-1.glb"
+        },
+        {
+          "path": "public/models/desert-cactus/lod-c2-2.glb"
+        },
+        {
+          "path": "public/models/desert-cactus/model-c2.glb"
+        },
+        {
+          "path": "public/models/desert-cactus/model.glb"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/lod-c2.glb"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/model-c2.glb"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/model-downed-r01.glb"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/model-gaits-r02.glb"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/model-motion-r04.glb"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/model-run-r05.glb"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/portraits/choice-r02-blue.webp"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/portraits/choice-r02-green.webp"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/portraits/choice-r02-original.webp"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/portraits/choice-r02-pink.webp"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/portraits/choice-r02-purple.webp"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/portraits/choice-r02-red.webp"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/portraits/choice-r02-teal.webp"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/portraits/choice-r02-white.webp"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/portraits/choice-r02-yellow.webp"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/portraits/choice-r03-blue.webp"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/portraits/choice-r03-green.webp"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/portraits/choice-r03-original.webp"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/portraits/choice-r03-pink.webp"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/portraits/choice-r03-purple.webp"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/portraits/choice-r03-red.webp"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/portraits/choice-r03-teal.webp"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/portraits/choice-r03-white.webp"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/portraits/choice-r03-yellow.webp"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/showcase/magic.glb"
+        },
+        {
+          "path": "public/models/desert-fennec-mage/startup.opt-ae024100e9484a99.glb"
+        },
+        {
+          "path": "public/models/desert-ground/lod1.glb"
+        },
+        {
+          "path": "public/models/desert-ground/lod2.glb"
+        },
+        {
+          "path": "public/models/desert-ground/model.glb"
+        },
+        {
+          "path": "public/models/drying-rack/lod-c2.glb"
+        },
+        {
+          "path": "public/models/drying-rack/model-c2.glb"
+        },
+        {
+          "path": "public/models/drying-rack/model-c2.opt-3838196fe4930dfa.glb"
+        },
+        {
+          "path": "public/models/drying-rack/model-c2.opt-6c486d2848e290e9.glb"
+        },
+        {
+          "path": "public/models/drying-rack/model.glb"
+        },
+        {
+          "path": "public/models/dugout-canoe/lod-c2.glb"
+        },
+        {
+          "path": "public/models/dugout-canoe/model-c2.glb"
+        },
+        {
+          "path": "public/models/dugout-canoe/model-c2.opt-dd78603029e5bfbc.glb"
+        },
+        {
+          "path": "public/models/dugout-canoe/model.glb"
+        },
+        {
+          "path": "public/models/firewood-log/lod-c2-1.glb"
+        },
+        {
+          "path": "public/models/firewood-log/lod-c2-2.glb"
+        },
+        {
+          "path": "public/models/firewood-log/lod1.glb"
+        },
+        {
+          "path": "public/models/firewood-log/model-c2.glb"
+        },
+        {
+          "path": "public/models/firewood-log/model-c2.opt-54eb160152338453.glb"
+        },
+        {
+          "path": "public/models/firewood-log/model-c2.opt-97e3211c37b11def.glb"
+        },
+        {
+          "path": "public/models/firewood-log/model.glb"
+        },
+        {
+          "path": "public/models/firewood-pile/lod-c2.glb"
+        },
+        {
+          "path": "public/models/firewood-pile/model-c2.glb"
+        },
+        {
+          "path": "public/models/firewood-pile/model-c2.opt-085ae5c774f9238d.glb"
+        },
+        {
+          "path": "public/models/firewood-pile/model-c2.opt-842b22efdf2b8b73.glb"
+        },
+        {
+          "path": "public/models/firewood-pile/model.glb"
+        },
+        {
+          "path": "public/models/flint-spear/model.glb"
+        },
+        {
+          "path": "public/models/flint-spear/model.opt-26577c4c03479da4.glb"
+        },
+        {
+          "path": "public/models/flint-spear/model.opt-49650d888ddcd679.glb"
+        },
+        {
+          "path": "public/models/flint-spear/model.opt-7012db17d1a72567.glb"
+        },
+        {
+          "path": "public/models/floppy-ear-mage/model.glb"
+        },
+        {
+          "path": "public/models/giant-ape/lod-c2.glb"
+        },
+        {
+          "path": "public/models/giant-ape/model-c2.glb"
+        },
+        {
+          "path": "public/models/giant-ape/model-downed-r01.glb"
+        },
+        {
+          "path": "public/models/giant-ape/model-gaits-r02.glb"
+        },
+        {
+          "path": "public/models/giant-ape/model-run-r05.glb"
+        },
+        {
+          "path": "public/models/giant-ape/model-stride-r13.glb"
+        },
+        {
+          "path": "public/models/giant-ape/portraits/choice-r02-blue.webp"
+        },
+        {
+          "path": "public/models/giant-ape/portraits/choice-r02-green.webp"
+        },
+        {
+          "path": "public/models/giant-ape/portraits/choice-r02-original.webp"
+        },
+        {
+          "path": "public/models/giant-ape/portraits/choice-r02-pink.webp"
+        },
+        {
+          "path": "public/models/giant-ape/portraits/choice-r02-purple.webp"
+        },
+        {
+          "path": "public/models/giant-ape/portraits/choice-r02-red.webp"
+        },
+        {
+          "path": "public/models/giant-ape/portraits/choice-r02-teal.webp"
+        },
+        {
+          "path": "public/models/giant-ape/portraits/choice-r02-white.webp"
+        },
+        {
+          "path": "public/models/giant-ape/portraits/choice-r02-yellow.webp"
+        },
+        {
+          "path": "public/models/giant-ape/portraits/choice-r03-blue.webp"
+        },
+        {
+          "path": "public/models/giant-ape/portraits/choice-r03-green.webp"
+        },
+        {
+          "path": "public/models/giant-ape/portraits/choice-r03-original.webp"
+        },
+        {
+          "path": "public/models/giant-ape/portraits/choice-r03-pink.webp"
+        },
+        {
+          "path": "public/models/giant-ape/portraits/choice-r03-purple.webp"
+        },
+        {
+          "path": "public/models/giant-ape/portraits/choice-r03-red.webp"
+        },
+        {
+          "path": "public/models/giant-ape/portraits/choice-r03-teal.webp"
+        },
+        {
+          "path": "public/models/giant-ape/portraits/choice-r03-white.webp"
+        },
+        {
+          "path": "public/models/giant-ape/portraits/choice-r03-yellow.webp"
+        },
+        {
+          "path": "public/models/giant-ape/startup.opt-ace0a32ae71949af.glb"
+        },
+        {
+          "path": "public/models/glacier-spires/lod-c2-1.glb"
+        },
+        {
+          "path": "public/models/glacier-spires/lod-c2-2.glb"
+        },
+        {
+          "path": "public/models/glacier-spires/model-c2.glb"
+        },
+        {
+          "path": "public/models/glacier-spires/model.glb"
+        },
+        {
+          "path": "public/models/hide-tent/lod-c2.glb"
+        },
+        {
+          "path": "public/models/hide-tent/model-c2.glb"
+        },
+        {
+          "path": "public/models/hide-tent/model-c2.opt-4d0c634ae45b31db.glb"
+        },
+        {
+          "path": "public/models/hide-tent/model.glb"
+        },
+        {
+          "path": "public/models/ice-ground/lod1.glb"
+        },
+        {
+          "path": "public/models/ice-ground/lod2.glb"
+        },
+        {
+          "path": "public/models/ice-ground/model.glb"
+        },
+        {
+          "path": "public/models/mammoth-meat/model-c2.glb"
+        },
+        {
+          "path": "public/models/mammoth-meat/model-c2.opt-4b49e324b633cf3f.glb"
+        },
+        {
+          "path": "public/models/mammoth-meat/model.glb"
+        },
+        {
+          "path": "public/models/meadow-grass/model.glb"
+        },
+        {
+          "path": "public/models/meadow-ground/model.glb"
+        },
+        {
+          "path": "public/models/meadow-ground/model.opt-b2df848b39f6d60e.glb"
+        },
+        {
+          "path": "public/models/meadow-sprig/model.glb"
+        },
+        {
+          "path": "public/models/obsidian-blade/model-c2.glb"
+        },
+        {
+          "path": "public/models/obsidian-blade/model-c2.opt-2869bf2d3c3fff93.glb"
+        },
+        {
+          "path": "public/models/obsidian-blade/model-c2.opt-76f281876580c9d5.glb"
+        },
+        {
+          "path": "public/models/obsidian-blade/model.glb"
+        },
+        {
+          "path": "public/models/obsidian-spear/model-c2.glb"
+        },
+        {
+          "path": "public/models/obsidian-spear/model-c2.opt-60cddabf4f7a57bc.glb"
+        },
+        {
+          "path": "public/models/obsidian-spear/model-c2.opt-ac18526ceb1f0514.glb"
+        },
+        {
+          "path": "public/models/obsidian-spear/model.glb"
+        },
+        {
+          "path": "public/models/orb-bot-beret/lod-c2.glb"
+        },
+        {
+          "path": "public/models/orb-bot-beret/model-c2.glb"
+        },
+        {
+          "path": "public/models/orb-bot-beret/model-c2.opt-67aa3569b08433a9.glb"
+        },
+        {
+          "path": "public/models/orb-bot-beret/model-r03.glb"
+        },
+        {
+          "path": "public/models/orb-bot-beret/portrait.png"
+        },
+        {
+          "path": "public/models/orb-bot-blue/lod-c2.glb"
+        },
+        {
+          "path": "public/models/orb-bot-blue/model-c2.glb"
+        },
+        {
+          "path": "public/models/orb-bot-blue/model-c2.opt-26b5c7764ea04bdd.glb"
+        },
+        {
+          "path": "public/models/orb-bot-blue/model-c2.opt-75577442755bc127.glb"
+        },
+        {
+          "path": "public/models/orb-bot-blue/model-r03.glb"
+        },
+        {
+          "path": "public/models/orb-bot-blue/portrait.png"
+        },
+        {
+          "path": "public/models/orb-bot-frog/lod-c2.glb"
+        },
+        {
+          "path": "public/models/orb-bot-frog/model-c2.glb"
+        },
+        {
+          "path": "public/models/orb-bot-frog/model-r01.glb"
+        },
+        {
+          "path": "public/models/orb-bot-frog/portrait.png"
+        },
+        {
+          "path": "public/models/orb-bot-green/lod-c2.glb"
+        },
+        {
+          "path": "public/models/orb-bot-green/model-c2.glb"
+        },
+        {
+          "path": "public/models/orb-bot-green/model-c2.opt-67dba21dba2f7082.glb"
+        },
+        {
+          "path": "public/models/orb-bot-green/model-c2.opt-be0f8d03776ccd9c.glb"
+        },
+        {
+          "path": "public/models/orb-bot-green/model-r03.glb"
+        },
+        {
+          "path": "public/models/orb-bot-green/portrait.png"
+        },
+        {
+          "path": "public/models/orb-bot-heart/lod-c2.glb"
+        },
+        {
+          "path": "public/models/orb-bot-heart/model-c2.glb"
+        },
+        {
+          "path": "public/models/orb-bot-heart/model-r02.glb"
+        },
+        {
+          "path": "public/models/orb-bot-heart/portrait.png"
+        },
+        {
+          "path": "public/models/orb-bot-orange/lod-c2.glb"
+        },
+        {
+          "path": "public/models/orb-bot-orange/model-c2.glb"
+        },
+        {
+          "path": "public/models/orb-bot-orange/model-c2.opt-59d466b4d610ba10.glb"
+        },
+        {
+          "path": "public/models/orb-bot-orange/model-c2.opt-8cb2e35cbf824478.glb"
+        },
+        {
+          "path": "public/models/orb-bot-orange/model-r08.glb"
+        },
+        {
+          "path": "public/models/orb-bot-orange/portrait.png"
+        },
+        {
+          "path": "public/models/orb-bot-purple/lod-c2.glb"
+        },
+        {
+          "path": "public/models/orb-bot-purple/model-c2.glb"
+        },
+        {
+          "path": "public/models/orb-bot-purple/model-c2.opt-7be19319f08ab7f6.glb"
+        },
+        {
+          "path": "public/models/orb-bot-purple/model-c2.opt-8ed72224b184825f.glb"
+        },
+        {
+          "path": "public/models/orb-bot-purple/model-r03.glb"
+        },
+        {
+          "path": "public/models/orb-bot-purple/portrait.png"
+        },
+        {
+          "path": "public/models/orb-bot-triangle/lod-c2.glb"
+        },
+        {
+          "path": "public/models/orb-bot-triangle/model-c2.glb"
+        },
+        {
+          "path": "public/models/orb-bot-triangle/model-r06.glb"
+        },
+        {
+          "path": "public/models/orb-bot-triangle/portrait.png"
+        },
+        {
+          "path": "public/models/orb-bot-white/lod-c2.glb"
+        },
+        {
+          "path": "public/models/orb-bot-white/model-c2.glb"
+        },
+        {
+          "path": "public/models/orb-bot-white/model-c2.opt-4449a0ae121bf747.glb"
+        },
+        {
+          "path": "public/models/orb-bot-white/model-c2.opt-c7b6b6878646330a.glb"
+        },
+        {
+          "path": "public/models/orb-bot-white/model-r03.glb"
+        },
+        {
+          "path": "public/models/orb-bot-white/portrait.png"
+        },
+        {
+          "path": "public/models/rimo-neko/lod-c2.glb"
+        },
+        {
+          "path": "public/models/rimo-neko/model-c02-r03.glb"
+        },
+        {
+          "path": "public/models/rimo-neko/model-c2.glb"
+        },
+        {
+          "path": "public/models/rimo-neko/model-c2.opt-858fbf0413ae556b.glb"
+        },
+        {
+          "path": "public/models/river-water/model.glb"
+        },
+        {
+          "path": "public/models/river-water/model.opt-47cb975f8278144b.glb"
+        },
+        {
+          "path": "public/models/sabertooth-tiger/lod-c2.glb"
+        },
+        {
+          "path": "public/models/sabertooth-tiger/model-c2.glb"
+        },
+        {
+          "path": "public/models/sabertooth-tiger/model-r13.glb"
+        },
+        {
+          "path": "public/models/shell-midden/model-c2.glb"
+        },
+        {
+          "path": "public/models/shell-midden/model-c2.opt-2d1fa0d48b759d83.glb"
+        },
+        {
+          "path": "public/models/shell-midden/model.glb"
+        },
+        {
+          "path": "public/models/snow-ground/lod1.glb"
+        },
+        {
+          "path": "public/models/snow-ground/lod1.opt-9bc89f21b3b4edc6.glb"
+        },
+        {
+          "path": "public/models/snow-ground/lod2.glb"
+        },
+        {
+          "path": "public/models/snow-ground/lod2.opt-41be00def31a39f4.glb"
+        },
+        {
+          "path": "public/models/snow-ground/model.glb"
+        },
+        {
+          "path": "public/models/snow-ground/model.opt-152de77614b9dff4.glb"
+        },
+        {
+          "path": "public/models/stone-axe/model-c2.glb"
+        },
+        {
+          "path": "public/models/stone-axe/model-c2.opt-dd29370a26645b9a.glb"
+        },
+        {
+          "path": "public/models/stone-axe/model.glb"
+        },
+        {
+          "path": "public/models/stone-firepit/lod-c2.glb"
+        },
+        {
+          "path": "public/models/stone-firepit/model-c2.glb"
+        },
+        {
+          "path": "public/models/stone-firepit/model-c2.opt-e41691b8703404e4.glb"
+        },
+        {
+          "path": "public/models/stone-firepit/model.glb"
+        },
+        {
+          "path": "public/models/valley-boulder/lod-c2.glb"
+        },
+        {
+          "path": "public/models/valley-boulder/model-c2.glb"
+        },
+        {
+          "path": "public/models/valley-boulder/model-c2.opt-4a90f42af8cd54a2.glb"
+        },
+        {
+          "path": "public/models/valley-boulder/model.glb"
+        },
+        {
+          "path": "public/models/valley-castle/model-r13-normal.glb"
+        },
+        {
+          "path": "public/models/valley-castle/model-r13.glb"
+        },
+        {
+          "path": "public/models/valley-pine/lod-c2.glb"
+        },
+        {
+          "path": "public/models/valley-pine/model-c2.glb"
+        },
+        {
+          "path": "public/models/valley-pine/model-c2.opt-22013bcd256918ae.glb"
+        },
+        {
+          "path": "public/models/valley-pine/model.glb"
+        },
+        {
+          "path": "public/models/violet-behemoth/lod-c2.glb"
+        },
+        {
+          "path": "public/models/violet-behemoth/model-c2.glb"
+        },
+        {
+          "path": "public/models/violet-behemoth/model-quadruped-r04.glb"
+        },
+        {
+          "path": "public/models/violet-behemoth/model-r10.glb"
+        },
+        {
+          "path": "public/models/volcanic-basalt-columns/lod-c2.glb"
+        },
+        {
+          "path": "public/models/volcanic-basalt-columns/model-c2.glb"
+        },
+        {
+          "path": "public/models/volcanic-basalt-columns/model.glb"
+        },
+        {
+          "path": "public/models/volcanic-cone/model-c1-normal.glb"
+        },
+        {
+          "path": "public/models/volcanic-cone/model.glb"
+        },
+        {
+          "path": "public/models/volcanic-ground/lod1.glb"
+        },
+        {
+          "path": "public/models/volcanic-ground/lod2.glb"
+        },
+        {
+          "path": "public/models/volcanic-ground/model.glb"
+        },
+        {
+          "path": "public/models/wood-footbridge/lod-c2.glb"
+        },
+        {
+          "path": "public/models/wood-footbridge/model-c2.glb"
+        },
+        {
+          "path": "public/models/wood-footbridge/model-c2.opt-6ec7bca35b5e07b9.glb"
+        },
+        {
+          "path": "public/models/wood-footbridge/model.glb"
+        },
+        {
+          "path": "public/models/wooden-spear/model-c2.glb"
+        },
+        {
+          "path": "public/models/wooden-spear/model-c2.opt-0b7e1417d8d1948c.glb"
+        },
+        {
+          "path": "public/models/wooden-spear/model-c2.opt-cb7a2ff24c5ac977.glb"
+        },
+        {
+          "path": "public/models/wooden-spear/model.glb"
+        },
+        {
+          "path": "public/models/woolly-mammoth/lod-c2.glb"
+        },
+        {
+          "path": "public/models/woolly-mammoth/model-c2.glb"
+        },
+        {
+          "path": "public/models/woolly-mammoth/model-motion-r04.glb"
+        },
+        {
+          "path": "public/models/woolly-mammoth/model-tail-r12.glb"
+        },
+        {
+          "path": "public/models/yellow-524-mascot/lod-c2.glb"
+        },
+        {
+          "path": "public/models/yellow-524-mascot/model-c14.glb"
+        },
+        {
+          "path": "public/models/yellow-524-mascot/model-c2.glb"
+        },
+        {
+          "path": "public/models/yellow-524-mascot/model-midpoint-r01.glb"
+        },
+        {
+          "path": "public/title/cave-mural-strip-preview.webp"
+        },
+        {
+          "path": "public/title/cave-mural-strip.webp"
+        },
+        {
+          "path": "public/title/cro-magnon-duo-transparent.png"
+        },
+        {
+          "path": "public/title/cro-magnon-mmo-transparent.png"
+        },
+        {
+          "path": "public/title/cro-magnon-xi-transparent.png"
+        },
+        {
+          "path": "public/title/cro-magnon-xi.png"
+        },
+        {
+          "path": "public/title/qr-nukonuko.png"
+        },
+        {
+          "path": "public/title/qr-otani.png"
+        },
+        {
+          "path": "public/title/qr-r524.png"
+        },
+        {
+          "path": "public/title/qr-rimo.png"
+        },
+        {
+          "path": "public/title/qr-ryuichi.png"
+        },
+        {
+          "path": "public/title/qr-urata.png"
+        },
+        {
+          "path": "public/title/qr-yuri.png"
+        }
+      ]
+    },
+    "thirdParty": {
+      "files": [
+        {
+          "path": "docs/controller-guide-a4.pdf"
+        },
+        {
+          "path": "docs/controller-guide-assets/dualshock-4.png"
+        },
+        {
+          "path": "docs/controller-guide-assets/f310.png"
+        },
+        {
+          "path": "docs/controller-guide-assets/switch-pro-front.png"
+        },
+        {
+          "path": "docs/controller-guide-assets/switch-pro.jpg"
+        }
+      ]
+    }
+  }
+}

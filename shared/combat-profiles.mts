@@ -1,0 +1,155 @@
+import type { CharacterProfile } from './types.mjs';
+interface AttackProfile {
+  id: string;
+  key: string;
+  label: string;
+  noun: string;
+  startText: string;
+  damage: number;
+  cooldownMs: number;
+  durationMs: number;
+  impactMs: number;
+  reach: number;
+  halfAngle: number;
+  energy: number;
+  /** How far a blow slides another player (metres); players are never hurt. */
+  knockback: number;
+  modelKey?: string;
+  projectileSpeed?: number;
+  projectileRadius?: number;
+}
+import { characterModel } from './characters.mjs';
+import { equippedItem } from './equipment.mjs';
+
+// This is shared presentation data; the server always selects it from the
+// normalized character, never from a weapon/damage field supplied by a client.
+export const ATTACK_PROFILES = Object.freeze({
+  tentacle: Object.freeze({
+    id: 'tentacle',
+    key: 'tentacle',
+    label: '触手を伸ばして攻撃',
+    noun: '触手',
+    startText: '触手を前へ伸ばした。',
+    damage: 22,
+    cooldownMs: 1100,
+    durationMs: 1000,
+    impactMs: 400,
+    // Together with the 0.6 m mantle radius, matches the exported 1.66 m tip.
+    reach: 1.05,
+    halfAngle: (45 * Math.PI) / 180,
+    energy: 3,
+    knockback: 1.8,
+  }),
+  unarmed: Object.freeze({
+    id: 'unarmed',
+    key: 'unarmed',
+    label: '大きな手で打つ',
+    noun: '大きな手',
+    startText: '大きな手を振り出した。',
+    damage: 25,
+    cooldownMs: 1000,
+    durationMs: 900,
+    impactMs: 400,
+    reach: 0.24,
+    halfAngle: (55 * Math.PI) / 180,
+    energy: 3,
+    knockback: 2.6,
+  }),
+  spear: Object.freeze({
+    id: 'spear',
+    key: 'spear',
+    label: '木槍で攻撃',
+    noun: '木槍',
+    startText: '木槍を突き出した。',
+    damage: 15,
+    cooldownMs: 850,
+    durationMs: 700,
+    impactMs: 333,
+    reach: 1.65,
+    halfAngle: (55 * Math.PI) / 180,
+    energy: 2,
+    knockback: 1.6,
+    modelKey: 'wooden-spear',
+  }),
+  obsidianSpear: Object.freeze({
+    id: 'obsidianSpear',
+    key: 'spear',
+    label: '黒曜石の槍で攻撃',
+    noun: '黒曜石の槍',
+    startText: '黒曜石の槍を突き出した。',
+    damage: 30,
+    cooldownMs: 850,
+    durationMs: 700,
+    impactMs: 333,
+    reach: 1.65,
+    halfAngle: (55 * Math.PI) / 180,
+    energy: 2,
+    knockback: 1.9,
+    modelKey: 'obsidian-spear',
+  }),
+  katana: Object.freeze({
+    id: 'katana',
+    key: 'katana',
+    label: '刀で斬る',
+    noun: '刀',
+    startText: '刀を振り抜いた。',
+    damage: 25,
+    cooldownMs: 700,
+    durationMs: 600,
+    impactMs: 267,
+    reach: 0.8,
+    halfAngle: (65 * Math.PI) / 180,
+    energy: 2,
+    knockback: 1.4,
+    modelKey: 'kunoichi-katana',
+  }),
+  magic: Object.freeze({
+    id: 'magic',
+    key: 'magic',
+    label: '光の魔法',
+    noun: '光弾',
+    startText: '光の魔法を放った。',
+    // Powerful but with a long recharge; the HUD shows the recharge meter.
+    damage: 60,
+    cooldownMs: 5000,
+    durationMs: 800,
+    impactMs: 400,
+    reach: 8,
+    halfAngle: (12 * Math.PI) / 180,
+    energy: 4,
+    knockback: 2.2,
+    projectileSpeed: 7,
+    projectileRadius: 0.16,
+  }),
+  science: Object.freeze({
+    id: 'science',
+    key: 'science',
+    label: '科学パルス',
+    noun: '科学パルス',
+    startText: '科学パルスを放った。',
+    damage: 24,
+    cooldownMs: 1600,
+    durationMs: 900,
+    impactMs: 400,
+    reach: 7,
+    halfAngle: (12 * Math.PI) / 180,
+    energy: 3,
+    knockback: 1.6,
+    projectileSpeed: 9,
+    projectileRadius: 0.14,
+  }),
+});
+
+export function attackProfile(character: CharacterProfile): Readonly<AttackProfile> {
+  return ATTACK_PROFILES[
+    characterModel(character).weapon ||
+      (equippedItem(character) === 'obsidianSpear' ? 'obsidianSpear' : 'spear')
+  ];
+}
+
+export const shoulderMagic = (
+  player:
+    | (CharacterProfile & { carrierId?: string | null; passengerId?: string | null })
+    | null
+    | undefined,
+) => !!player?.carrierId && !player.passengerId && attackProfile(player).key === 'magic';

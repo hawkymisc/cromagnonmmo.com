@@ -1,0 +1,311 @@
+import { CollisionWorld } from './collision.mjs';
+import { coastDistance } from './paleo-geography.mjs';
+import { stopActor } from './combat.mjs';
+import { attackProfile } from './combat-profiles.mjs';
+import { movePlayer } from './movement.mjs';
+import { maritimeWeather, seaBoatSpeed } from './maritime-weather.mjs';
+import { walkHeight } from './terrain.mjs';
+import { jumpProgress } from './jumping.mjs';
+
+export const BOATING = Object.freeze({
+  version: 2,
+  wood: 12,
+  inventoryLimit: 99,
+  maxBoats: 24,
+  radius: 2,
+  reach: 4.8,
+  speed: 4,
+  fastSpeed: 7,
+  waterY: -0.52,
+});
+const distance = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
+export const boardedBoat = (room, player) =>
+  (room.boats || []).find((b) => b.id === player.boatId && b.riderId === player.id);
+export const carriedBoats = (player) => {
+  const count = player?.inventory?.boat;
+  return Number.isSafeInteger(count) ? Math.max(0, Math.min(BOATING.inventoryLimit, count)) : 0;
+};
+export function reachableBoat(room, player, targetId?) {
+  if (!player || !room.collision?.free(player, player.radius)) return null;
+  return (
+    (room.boats || [])
+      .filter(
+        (boat) =>
+          !boat.riderId &&
+          (targetId === undefined || boat.id === targetId) &&
+          distance(player, boat) <= BOATING.reach &&
+          room.shoreCollision?.segmentFree(player, boat, 0.2),
+      )
+      .sort((a, b) => distance(a, player) - distance(b, player))[0] ?? null
+  );
+}
+export function waterBodyFree(x, z, radius = 0) {
+  if (coastDistance(x, z) >= -0.12) return false;
+  for (let i = 0; i < 16; i++) {
+    const a = (i * Math.PI) / 8;
+    if (coastDistance(x + Math.cos(a) * radius, z + Math.sin(a) * radius) >= -0.12) return false;
+  }
+  return true;
+}
+export class SeaCollision extends CollisionWorld {
+  constructor(land) {
+    super(land.obstacles, { active: land.active, coast: false });
+  }
+  free(p, r, dynamic = [], ignore = (_obstacle) => false) {
+    return waterBodyFree(p.x, p.z, r) && super.free(p, r, dynamic, ignore);
+  }
+  move(start, dx, dz, r, dynamic = []) {
+    let p = { x: start.x, z: start.z };
+    const n = Math.max(1, Math.ceil(Math.hypot(dx, dz) / 0.1));
+    for (let i = 0; i < n; i++) {
+      for (const next of [
+        { x: p.x + dx / n, z: p.z + dz / n },
+        { x: p.x + dx / n, z: p.z },
+        { x: p.x, z: p.z + dz / n },
+      ]) {
+        if (this.free(next, r, dynamic)) {
+          p = next;
+          break;
+        }
+      }
+    }
+    return p;
+  }
+  path(start, goal, r, dynamic = []) {
+    // A land destination must never start an endless search or drag a boat ashore.
+    if (!waterBodyFree(goal.x, goal.z, r)) return [];
+    return super.path(start, goal, r, dynamic);
+  }
+}
+export function initializeBoats(room) {
+  room.boats = [];
+  room.seaCollision = new SeaCollision(room.collision);
+  room.shoreCollision = new CollisionWorld(room.collision.obstacles, {
+    active: room.collision.active,
+    coast: false,
+  });
+}
+export const boatObstacles = (room, except?) =>
+  (room.boats || [])
+    .filter((b) => b !== except)
+    .flatMap((b) => [
+      { id: b.id, type: 'circle', x: b.x, z: b.z, radius: b.radius },
+      ...(b.riderId && b.mooring
+        ? [{ id: `${b.id}-mooring`, type: 'circle', ...b.mooring, radius: b.radius }]
+        : []),
+    ]);
+function landObstacles(room, player) {
+  return [...room.players.values()]
+    .filter((p) => p !== player && !p.mountId && !p.boatId)
+    .concat(
+      room.animals.filter((a) => ['alive', 'dying'].includes(a.phase)),
+      room.enemies.filter((e) => ['alive', 'dying'].includes(e.phase)),
+      room.residents || [],
+    )
+    .map((a) => ({ id: a.id, type: 'circle', x: a.x, z: a.z, radius: a.radius }));
+}
+export function launchPoint(room, player) {
+  if (coastDistance(player.x, player.z) > BOATING.reach) return null;
+  if (!room.collision.free(player, player.radius)) return null;
+  const dynamic = boatObstacles(room);
+  for (let r = 2.4; r <= BOATING.reach; r += 0.3)
+    for (let i = 0; i < 32; i++) {
+      const a = (i * Math.PI) / 16,
+        p = { x: player.x + Math.cos(a) * r, z: player.z + Math.sin(a) * r };
+      if (
+        room.seaCollision.free(p, BOATING.radius, dynamic) &&
+        room.shoreCollision.segmentFree(player, p, 0.2)
+      )
+        return p;
+    }
+  return null;
+}
+// A coastline edit can turn a saved mooring into land. Preserve the boat and
+// reconnect its passengers to a nearby usable beach before restoring sessions.
+export function restoreBoatMooring(room, boat) {
+  if (
+    room.seaCollision.free(boat.mooring, boat.radius, boatObstacles(room)) &&
+    room.collision.free(boat.shore, 0.32)
+  )
+    return;
+  const origin = boat.shore;
+  for (let radius = 0; radius <= 360; radius += 4) {
+    const count = Math.max(1, Math.ceil((2 * Math.PI * radius) / 4));
+    for (let i = 0; i < count; i++) {
+      const angle = (2 * Math.PI * i) / count;
+      const shore = {
+        x: origin.x + Math.cos(angle) * radius,
+        z: origin.z + Math.sin(angle) * radius,
+        radius: 0.32,
+      };
+      const coast = coastDistance(shore.x, shore.z);
+      if (coast < 0.8 || coast > 4.5 || Math.abs(walkHeight(shore.x, shore.z)) > 1.5) continue;
+      const mooring = launchPoint(room, shore);
+      if (!mooring) continue;
+      boat.shore = { x: shore.x, z: shore.z };
+      boat.mooring = mooring;
+      Object.assign(boat, mooring);
+      return;
+    }
+  }
+  throw new Error('No safe shore for saved boat');
+}
+export function landingPoint(room, player, boat) {
+  const dynamic = landObstacles(room, player);
+  for (let r = boat.radius + player.radius + 0.2; r <= BOATING.reach; r += 0.3)
+    for (let i = 0; i < 32; i++) {
+      const a = boat.facing + Math.PI / 2 + (i * Math.PI) / 16,
+        p = { x: boat.x + Math.sin(a) * r, z: boat.z + Math.cos(a) * r };
+      if (
+        room.collision.free(p, player.radius, dynamic) &&
+        room.shoreCollision.segmentFree(boat, p, player.radius, dynamic)
+      )
+        return p;
+    }
+  return null;
+}
+export function releaseBoat(room, player) {
+  const boat = boardedBoat(room, player);
+  if (boat) {
+    stopActor(boat);
+    boat.riderId = null;
+    // Disconnect/restart returns both parties to the last safe embarkation.
+    Object.assign(boat, boat.mooring);
+    Object.assign(player, boat.shore);
+  }
+  player.boatId = null;
+  stopActor(player);
+}
+export function handleBoatAction(room, player, message, now) {
+  if (!['craftBoat', 'launchBoat', 'recoverBoat', 'boardBoat'].includes(message.action))
+    return null;
+  const fail = (text) => ({ changed: false, tone: 'info', text });
+  if (player.downedUntil || player.mountId || player.carrierId || player.passengerId)
+    return fail('地上で元気なときに船を使おう。マンモスからは R で降りられます。');
+  const boat = boardedBoat(room, player);
+  if (boat) {
+    if (message.action !== 'boardBoat') return fail('岸へ降りてから船を使おう。');
+    const point = landingPoint(room, player, boat);
+    if (!point) return fail('ここでは降りられません。岸に近づいて B を押そう。');
+    stopActor(boat);
+    boat.riderId = null;
+    boat.shore = { ...point };
+    boat.mooring = { x: boat.x, z: boat.z };
+    player.boatId = null;
+    stopActor(player);
+    Object.assign(player, point);
+    return {
+      changed: true,
+      tone: 'success',
+      text: '岸に降りました。近くの船は回収して持ち運べます。',
+    };
+  }
+  if (
+    player.cookingEndsAt ||
+    player.fishing ||
+    player.coastalActivity ||
+    jumpProgress(player, now) !== null ||
+    (player.attackSequence && now - player.attackAt < attackProfile(player).durationMs)
+  )
+    return fail('今の動作を終えてから船を使おう。');
+  if (message.action === 'craftBoat') {
+    if (player.inventory.wood < BOATING.wood)
+      return fail(`丸木舟には木材 ${BOATING.wood} が必要です。`);
+    if (carriedBoats(player) >= BOATING.inventoryLimit)
+      return fail('丸木舟の持ち物がいっぱいです。');
+    player.inventory.wood -= BOATING.wood;
+    player.inventory.boat = carriedBoats(player) + 1;
+    stopActor(player);
+    return {
+      changed: true,
+      tone: 'success',
+      text: '木材12個で丸木舟を作り、持ち物に入れました。水辺で船を出せます。',
+    };
+  }
+  if (message.action === 'launchBoat') {
+    if (!carriedBoats(player)) return fail('丸木舟を持っていません。木材12個で作れます。');
+    if (room.boats.length >= BOATING.maxBoats)
+      return fail(`水面の船は部屋に${BOATING.maxBoats}隻までです。空いた船を回収しよう。`);
+    const point = launchPoint(room, player);
+    if (!point) return fail('船を浮かべられる、障害物のない海岸に近づこう。');
+    const id = Array.from({ length: BOATING.maxBoats }, (_, i) => `boat-${i + 1}`).find(
+      (id) => !room.boats.some((b) => b.id === id),
+    );
+    room.boats.push({
+      id,
+      ...point,
+      mooring: { ...point },
+      shore: { x: player.x, z: player.z },
+      radius: BOATING.radius,
+      facing: Math.atan2(point.x - player.x, point.z - player.z),
+      riderId: null,
+      dx: 0,
+      dz: 0,
+      path: [],
+      target: null,
+      speed: 0,
+      moving: false,
+      running: false,
+      lastInput: 0,
+    });
+    player.inventory.boat = carriedBoats(player) - 1;
+    stopActor(player);
+    return {
+      changed: true,
+      tone: 'success',
+      text: '持ち物から丸木舟を出しました。B／× で乗れます。',
+    };
+  }
+  if (message.targetId !== undefined && typeof message.targetId !== 'string')
+    return fail('近くの空いた船を選ぼう。');
+  const target = reachableBoat(room, player, message.targetId);
+  if (!target) return fail('岸にある空いた船に近づこう。');
+  if (message.action === 'recoverBoat') {
+    if (carriedBoats(player) >= BOATING.inventoryLimit)
+      return fail('丸木舟の持ち物がいっぱいです。');
+    room.boats.splice(room.boats.indexOf(target), 1);
+    player.inventory.boat = carriedBoats(player) + 1;
+    stopActor(player);
+    return { changed: true, tone: 'success', text: '丸木舟を回収し、持ち物に戻しました。' };
+  }
+  stopActor(player);
+  stopActor(target);
+  target.shore = { x: player.x, z: player.z };
+  target.mooring = { x: target.x, z: target.z };
+  player.boatId = target.id;
+  target.riderId = player.id;
+  target.lastInput = now;
+  target.runningRequested = false;
+  player.pendingStrike = null;
+  copyBoatPosition(player, target);
+  return {
+    changed: true,
+    tone: 'success',
+    text: '丸木舟に乗りました！ WASDで操船・方向キー2回押しで速く進む・岸でBを押すと降ります。',
+  };
+}
+export function copyBoatPosition(player, boat) {
+  for (const k of ['x', 'z', 'facing', 'speed', 'moving', 'running']) player[k] = boat[k];
+}
+export function updateBoats(room, dt, now) {
+  const weather = maritimeWeather(now, room.createdAt ?? now);
+  for (const boat of room.boats) {
+    if (!boat.riderId) continue;
+    const player = room.players.get(boat.riderId);
+    if (!player || player.boatId !== boat.id) {
+      stopActor(boat);
+      boat.riderId = null;
+      Object.assign(boat, boat.mooring);
+      continue;
+    }
+    const dynamic = boatObstacles(room, boat);
+    movePlayer(
+      boat,
+      dt,
+      now,
+      (p, dx, dz) => room.seaCollision.move(p, dx, dz, boat.radius, dynamic),
+      seaBoatSpeed(boat, boat.runningRequested ? BOATING.fastSpeed : BOATING.speed, weather),
+    );
+    copyBoatPosition(player, boat);
+  }
+}

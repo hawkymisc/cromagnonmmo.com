@@ -1,0 +1,79 @@
+import {
+  CHARACTER_MODELS,
+  PLAYABLE_CHARACTER_MODELS,
+  characterModel,
+  normalizeCharacter,
+} from '../shared/characters.mjs';
+import type { CharacterModel, CharacterProfile } from '../shared/types.mjs';
+import { characterPortraitUrl } from './character-portraits.js';
+
+// One card per playable look. Humans are listed as separate female/male cards so the player
+// never has to pick a species first and a gender second. The first look of a species and gender
+// keeps its species-gender value (saved choices and QA selectors from before the chibi cast);
+// further looks of the pair are valued by their model key.
+export const cardValue = (model: Readonly<CharacterModel>) =>
+  CHARACTER_MODELS.find((first) => first.species === model.species && first.gender === model.gender)
+    ?.key === model.key
+    ? `${model.species}-${model.gender}`
+    : model.key;
+
+export const characterValue = (profile: CharacterProfile) => cardValue(characterModel(profile));
+
+export function parseCharacterValue(value: unknown) {
+  const text = String(value ?? '');
+  if (CHARACTER_MODELS.some((model) => model.key === text))
+    return normalizeCharacter({ character: text });
+  // A species-gender value from before the cards carried model keys.
+  const [species, gender] = text.split('-');
+  return normalizeCharacter({ species, gender });
+}
+
+export function characterChoiceName(model: Readonly<CharacterModel>) {
+  const [name, variant] = model.name.split(' ');
+  if (!variant) return name;
+  const child = variant.match(/^(.+)の(女の子|男の子)$/);
+  return child ? `${child[1]}の${name}${child[2]}` : `${name}（${variant}）`;
+}
+
+// Only the picker order changes. The model roster's first female/male looks still
+// resolve old saved choices, so never reorder that shared roster for presentation.
+const lastChoices = ['cro-magnon-hunter', 'desert-fennec-mage', 'giant-ape'];
+const firstChoices = PLAYABLE_CHARACTER_MODELS.filter((model) => !lastChoices.includes(model.key));
+const boys = firstChoices.filter((model) => model.species === 'cro' && model.gender === 'male');
+const girls = firstChoices.filter((model) => model.species === 'cro' && model.gender === 'female');
+const characterChoices = [
+  ...boys.flatMap((boy, index) => [boy, ...girls.slice(index, index + 1)]),
+  ...girls.slice(boys.length),
+  ...firstChoices.filter((model) => model.species !== 'cro'),
+  ...lastChoices.flatMap((key) => PLAYABLE_CHARACTER_MODELS.filter((model) => model.key === key)),
+];
+
+export function characterChoicesMarkup(dye: unknown = null) {
+  return `<fieldset class="character-options"><legend class="character-legend">キャラクターを選ぶ</legend><div class="character-choice-grid">${characterChoices
+    .map(
+      (model) =>
+        `<label class="character-choice"><input type="radio" name="character" value="${cardValue(model)}" required><img class="character-art" data-character-image="${model.key}" src="${characterPortraitUrl(model.key, dye)}" width="336" height="384" alt="" decoding="async" draggable="false"><span class="character-name"><strong>${characterChoiceName(model)}</strong></span></label>`,
+    )
+    .join('')}</div></fieldset>`;
+}
+
+export function bindCharacterSelection(form: HTMLFormElement, profile: CharacterProfile) {
+  const input = form.querySelector(
+    `input[name="character"][value="${characterValue(profile)}"]`,
+  ) as HTMLInputElement | null;
+  if (input) input.checked = true;
+  const grid = form.querySelector<HTMLElement>('.character-choice-grid');
+  if (!grid) return;
+  // One DOM focus drives the highlight and confirmation for every input device.
+  // Hover only moves the cursor; it never changes the radio value or opens a step.
+  // Rebinding the setup form replaces this handler instead of accumulating listeners.
+  let lastPointer: { x: number; y: number } | null = null;
+  grid.onpointermove = (event) => {
+    if (event.pointerType === 'touch' || event.buttons !== 0) return;
+    if (lastPointer?.x === event.clientX && lastPointer?.y === event.clientY) return;
+    lastPointer = { x: event.clientX, y: event.clientY };
+    const card = (event.target as Element).closest('.character-choice');
+    const target = card?.querySelector<HTMLInputElement>('input[name="character"]');
+    if (target && target !== document.activeElement) target.focus({ preventScroll: true });
+  };
+}

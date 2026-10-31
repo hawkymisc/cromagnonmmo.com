@@ -1,0 +1,433 @@
+{
+  "worldAssets": [
+    {
+      "modelKey": "meadow-grass",
+      "name": "草の株",
+      "kind": "foliage",
+      "candidate": 1,
+      "status": "reviewed-prototype",
+      "url": "/models/meadow-grass/model.glb",
+      "sha256": "24b41b18d4c5ea40ca660d7eda16f2154ca856828ebfc721d6c3489efe63f9c0",
+      "bytes": 3392616,
+      "triangles": 42587,
+      "upAxis": "Y",
+      "forwardAxis": "+Z",
+      "heightMetres": 0.5501837610190705,
+      "widthMetres": 0.7221716642379761,
+      "placement": {
+        "pivot": "ground-centred",
+        "min": [
+          -0.3611329197883606,
+          -0.000024902719815145247,
+          -0.3530409634113312
+        ],
+        "max": [
+          0.3610387444496155,
+          0.5501588582992554,
+          0.353342741727829
+        ]
+      },
+      "clips": [],
+      "lods": [],
+      "provenance": {
+        "provider": "Claude Fable 5.1 (Claude Code)",
+        "claudeUsed": true,
+        "referenceGenerator": "Art-directed Blender 5.2 render",
+        "referenceImage": "output/model-generation/models/meadow-grass/source/original/reference-v2.png",
+        "referenceSha256": "ecfc6aa427b736702b66bce22100fde6dac129941d6bbc97be81abbb6d19cf52",
+        "reconstruction": "Local TRELLIS-2 1024, seed 42; source-derived weld + quadric reduction with retained UV/albedo, foliage-only albedo luminance calibration; no replacement geometry.",
+        "candidateFile": "output/model-generation/models/meadow-grass/work/low-poly/candidate-05/candidate.glb",
+        "visualReview": "output/model-generation/models/meadow-grass/qa/adoption-review-rev05.json"
+      }
+    },
+    {
+      "modelKey": "flint-spear",
+      "name": "石槍",
+      "kind": "equipment",
+      "candidate": 1,
+      "status": "reviewed-prototype",
+      "url": "/models/flint-spear/model.opt-26577c4c03479da4.glb",
+      "sha256": "26577c4c03479da4246040201ac5574fc5cd91127b9c44e7a0389a37a4305391",
+      "bytes": 874712,
+      "triangles": 3065,
+      "upAxis": "Y",
+      "forwardAxis": "+Z",
+      "heightMetres": 2.1,
+      "widthMetres": null,
+      "placement": {
+        "pivot": "grip",
+        "gripNode": "Grip.R",
+        "shaftAxis": "+Y",
+        "gripToButtMetres": 0.7136262059211731,
+        "gripToTipMetres": 1.3853787183761597,
+        "attachment": "Rigid child of the character hand grip; the mesh already carries its grip-relative offset."
+      },
+      "clips": [],
+      "provenance": {
+        "provider": "Codex",
+        "claudeUsed": false,
+        "referenceGenerator": "Built-in imagegen",
+        "referenceImage": "output/model-generation/models/flint-spear/source/original/reference-v1.png",
+        "referenceSha256": "285c5759c379628da85d7d399373260447b913e3e6d942677608b522c386629e",
+        "reconstruction": "TRELLIS-2",
+        "candidateFile": "output/model-generation/models/flint-spear/work/low-poly/candidate-01/candidate.glb",
+        "visualReview": "output/model-generation/models/flint-spear/qa/adoption-review.json"
+      },
+      "lods": [],
+      "runtimeOptimization": {
+        "adoption": "20261010-r07-a01",
+        "candidateRevision": "assets/optimized-runtime/20261010-r07",
+        "selection": "ordinary-compressed",
+        "original": {
+          "url": "/models/flint-spear/model.glb",
+          "sha256": "1a10db6d1b44da1e982f88e5ae9ef6be8fb74f5900ebd9258380ad200e53ed3d",
+          "bytes": 2816964,
+          "triangles": 5679,
+          "lods": []
+        },
+        "supersedes": {
+          "adoption": "20261010-r05-a02",
+          "candidateRevision": "assets/optimized-runtime/20261010-r05",
+          "url": "/models/flint-spear/model.opt-7012db17d1a72567.glb",
+          "sha256": "7012db17d1a7256749609736b0c2637c0036ab42a4aebd23a97348876c7d6b7a",
+          "bytes": 934232,
+          "lods": []
+        },
+        "adoptedBy": "20261010-r07-a01"
+      }
+    },
+    {
+      "modelKey": "cockle-shell",
+      "name": "浜の貝",
+      "kind": "static",
+      "candidate": 2,
+      "status": "remake-candidate-2-integrated",
+      "url": "/models/cockle-shell/model-c2.opt-b6f8856977543650.glb",
+      "sha256": "b6f88569775436506d40d845c3893cd5a044b3c7dc81473dee74733f2ac068f0",
+      "bytes": 219300,
+      "triangles": 1140,
+      "upAxis": "Y",
+      "forwardAxis": "+Z",
+      "heightMetres": 0.12,
+      "widthMetres": 0.16,
+      "onDemand": true,
+      "environment": true,
+      "placement": {
+        "pivot": "ground-centred"
+      },
+      "clips": [],
+      "lods": [],
+      "provenance": {
+        "provider": "Claude Code (Opus 5.5)",
+        "claudeUsed": true,
+        "referenceGenerator": "none: the delivered C1 surface is the bake source (identity unchanged)",
+        "referenceImage": "output/model-generation/models/cockle-shell/work/candidate-02/trellis/c1-delivered.glb",
+        "referenceSha256": "7e4f448274b346dd8a3705901cccf0e7e4d49be2bc09b683cd85cdc740122a81",
+        "reconstruction": "Derived from the delivered TRELLIS-2 surface",
+        "denseFile": "output/model-generation/models/cockle-shell/work/candidate-02/trellis/c1-delivered.glb",
+        "denseSha256": "7e4f448274b346dd8a3705901cccf0e7e4d49be2bc09b683cd85cdc740122a81",
+        "processReport": "output/model-generation/models/cockle-shell/work/candidate-02/low-poly/m02/process-report.json",
+        "rigReport": null,
+        "pipeline": "scripts/remake/ (trellis_queue.py, remake_process.py, rig_*.py)",
+        "previousDelivery": {
+          "url": "/models/cockle-shell/model.glb",
+          "sha256": "7e4f448274b346dd8a3705901cccf0e7e4d49be2bc09b683cd85cdc740122a81",
+          "triangles": 35645,
+          "bytes": 10177512,
+          "candidate": 1,
+          "revision": null
+        },
+        "previousProvenance": {
+          "provider": "Codex",
+          "claudeUsed": false,
+          "referenceGenerator": "Built-in imagegen",
+          "referenceImage": "assets/coastal-craft/models/cockle-shell/source/reference-v1.png",
+          "reconstruction": "Local TRELLIS-2, resolution 1024, seed 42",
+          "candidateFile": "assets/coastal-craft/models/cockle-shell/work/revision-02/candidate.glb",
+          "visualReview": "assets/coastal-craft/models/cockle-shell/qa/adoption-review.json",
+          "referenceSha256": "b00df78d86e6d7d9f7b72a4540d9ff5e1c7d3dc2f79a0ef30ef0f01fc978086f",
+          "denseSha256": "32c227435572a5185b268a9e76b273647c4658628406fde0414d531c6e6ddafa"
+        },
+        "transfer": "meshopt subset of the delivered vertices (scripts/remake/process_static.sh with the delivered GLB as source), xatlas charts, 512 albedo + baked normal",
+        "visualReview": "assets/asset-remake/reviews/cockle-shell.json"
+      },
+      "revision": "c2-m02",
+      "runtimeOptimization": {
+        "adoption": "20261010-r07-a01",
+        "candidateRevision": "assets/optimized-runtime/20261010-r07",
+        "selection": "ordinary-compressed",
+        "original": {
+          "url": "/models/cockle-shell/model-c2.glb",
+          "sha256": "dc8defa88c3a04a5c34f48b80d62ada720de98c6960349965a33d9fb79bab2fe",
+          "bytes": 248456,
+          "triangles": 1474,
+          "lods": []
+        },
+        "adoptedBy": "20261010-r07-a01",
+        "supersedes": {
+          "adoption": "20261009-r04-a01",
+          "candidateRevision": "assets/optimized-runtime/20261009-r04",
+          "url": "/models/cockle-shell/model-c2.opt-16d1634c87d7806d.glb",
+          "sha256": "16d1634c87d7806d571da425e7edcbb4fe45f87e4d41720b6c568fe700aa9efa",
+          "bytes": 228772,
+          "lods": []
+        }
+      }
+    },
+    {
+      "modelKey": "shell-midden",
+      "name": "貝塚",
+      "kind": "static",
+      "candidate": 2,
+      "status": "remake-candidate-2-integrated",
+      "url": "/models/shell-midden/model-c2.opt-2d1fa0d48b759d83.glb",
+      "sha256": "2d1fa0d48b759d83b51fe3f10069d51f1afa08ac1b4bb6907335d212e61eaacb",
+      "bytes": 1382268,
+      "triangles": 8940,
+      "upAxis": "Y",
+      "forwardAxis": "+Z",
+      "heightMetres": 0.4294,
+      "widthMetres": 1.5,
+      "onDemand": true,
+      "environment": true,
+      "placement": {
+        "pivot": "ground-centred"
+      },
+      "clips": [],
+      "lods": [],
+      "provenance": {
+        "provider": "Claude Code (Opus 5.5)",
+        "claudeUsed": true,
+        "referenceGenerator": "Codex CLI built-in image_gen (gpt-5.6-sol)",
+        "referenceImage": "output/model-generation/models/shell-midden/source/original/candidate2-ref-a.png",
+        "referenceSha256": "2104a4ba0a607f0e2dd0fb4b8ee85f4de78c9c543cbd7e65a37e827c88984a0a",
+        "reconstruction": "Local TRELLIS-2 v0.8.1, res 1024, tex 1024, seed recorded in dense JSON",
+        "denseFile": "output/model-generation/models/shell-midden/work/candidate-02/trellis/dense-ref2a-res1024-tex1024-seed0042.glb",
+        "denseSha256": "c9b8fe79ad31b5a7f518a512c1d077c91708e687cab03e4fba3b5d667f970b65",
+        "processReport": "output/model-generation/models/shell-midden/work/candidate-02/low-poly/m02/process-report.json",
+        "rigReport": null,
+        "pipeline": "scripts/remake/ (trellis_queue.py, remake_process.py, rig_*.py)",
+        "previousDelivery": {
+          "url": "/models/shell-midden/model.glb",
+          "sha256": "494844840a1ac461837e73874bf3858d5a5f73baf8655769b6cd590d048e07cd",
+          "triangles": 92239,
+          "bytes": 15209472,
+          "candidate": 1,
+          "revision": null
+        },
+        "previousProvenance": {
+          "provider": "Codex",
+          "claudeUsed": false,
+          "referenceGenerator": "Built-in imagegen",
+          "referenceImage": "assets/coastal-craft/models/shell-midden/source/reference-v1.png",
+          "reconstruction": "Local TRELLIS-2, resolution 1024, seed 42",
+          "candidateFile": "assets/coastal-craft/models/shell-midden/work/revision-01/candidate.glb",
+          "visualReview": "assets/coastal-craft/models/shell-midden/qa/adoption-review.json",
+          "referenceSha256": "e7de83392920365a2260b3e720f240bceb33ffd88fd2d50b41fae44a7ad66b99",
+          "denseSha256": "4c9f5954ff854dd3b130b62c93e6dfc754951d601a46c822706257b7e6c2007b"
+        },
+        "visualReview": "assets/asset-remake/reviews/shell-midden.json"
+      },
+      "revision": "c2-m02",
+      "runtimeOptimization": {
+        "adoption": "20261010-r07-a01",
+        "candidateRevision": "assets/optimized-runtime/20261009-r04",
+        "selection": "ordinary-compressed",
+        "original": {
+          "url": "/models/shell-midden/model-c2.glb",
+          "sha256": "d45280c759dde06ac2a21b75b54953753648ff1585ba16319da7bf1e15bfa444",
+          "bytes": 3343096,
+          "triangles": 8940,
+          "lods": []
+        },
+        "adoptedBy": "20261009-r04-a01"
+      }
+    },
+    {
+      "modelKey": "obsidian-blade",
+      "name": "黒曜石の刃",
+      "kind": "static",
+      "candidate": 2,
+      "status": "remake-candidate-2-integrated",
+      "url": "/models/obsidian-blade/model-c2.opt-76f281876580c9d5.glb",
+      "sha256": "76f281876580c9d5be10ca33d709f6290bd64e1eefeb805bd3ba58ceb7095822",
+      "bytes": 146988,
+      "triangles": 524,
+      "upAxis": "Y",
+      "forwardAxis": "+Z",
+      "heightMetres": 0.2908,
+      "widthMetres": 0.14,
+      "onDemand": true,
+      "environment": true,
+      "placement": {
+        "pivot": "blade-base"
+      },
+      "clips": [],
+      "lods": [],
+      "provenance": {
+        "provider": "Claude Code (Opus 5.5)",
+        "claudeUsed": true,
+        "referenceGenerator": "Codex CLI built-in image_gen (gpt-5.6-sol)",
+        "referenceImage": "output/model-generation/models/obsidian-blade/source/original/candidate2-ref-a.png",
+        "referenceSha256": "d8c5f45e264af91df0b46ef875ae0d643a256ad65e4a880cc80d27478a41f039",
+        "reconstruction": "Local TRELLIS-2 v0.8.1, res 1024, tex 1024, seed recorded in dense JSON",
+        "denseFile": "output/model-generation/models/obsidian-blade/work/candidate-02/trellis/dense-ref2a-res1024-tex1024-seed0042.glb",
+        "denseSha256": "f36e04c58d05d9c105a91d702ac2a9413b6548e892ef573e419228d154b03e6b",
+        "processReport": "output/model-generation/models/obsidian-blade/work/candidate-02/low-poly/m01/process-report.json",
+        "rigReport": null,
+        "pipeline": "scripts/remake/ (trellis_queue.py, remake_process.py, rig_*.py)",
+        "previousDelivery": {
+          "url": "/models/obsidian-blade/model.glb",
+          "sha256": "3319075637b3714f836a59d9381fa23f0fb943ed8969a6c193f11e5152590f60",
+          "triangles": 1501,
+          "bytes": 2816960,
+          "candidate": 1,
+          "revision": null
+        },
+        "previousProvenance": {
+          "provider": "Codex",
+          "claudeUsed": false,
+          "referenceGenerator": "Existing imagegen → TRELLIS flint-spear lineage",
+          "referenceImage": "public/models/flint-spear/model.glb",
+          "reconstruction": "Source-derived variant of the retained flint-spear GLB",
+          "candidateFile": "assets/coastal-craft/models/obsidian-blade/work/revision-01/candidate.glb",
+          "visualReview": "assets/coastal-craft/models/obsidian-blade/qa/adoption-review.json",
+          "sourceAsset": "assets/coastal-craft/models/obsidian-blade/source/flint-spear.glb",
+          "sourceAssetSha256": "1a10db6d1b44da1e982f88e5ae9ef6be8fb74f5900ebd9258380ad200e53ed3d",
+          "weaponQA": "assets/coastal-craft/weapon-qa/adoption-review.json",
+          "referenceSha256": "1a10db6d1b44da1e982f88e5ae9ef6be8fb74f5900ebd9258380ad200e53ed3d",
+          "referenceNote": "No image reference: the retained flint-spear GLB was the source model (historical reference recorded in its asset.json)."
+        },
+        "visualReview": "assets/asset-remake/reviews/obsidian-blade.json"
+      },
+      "revision": "c2-m01",
+      "runtimeOptimization": {
+        "adoption": "20261010-r07-a01",
+        "candidateRevision": "assets/optimized-runtime/20261010-r07",
+        "selection": "ordinary-compressed",
+        "original": {
+          "url": "/models/obsidian-blade/model-c2.glb",
+          "sha256": "87e6167887fdab6e2a0331837ef305b0470078b9e3afcd450dfae8ea1080b66b",
+          "bytes": 185140,
+          "triangles": 1500,
+          "lods": []
+        },
+        "adoptedBy": "20261010-r07-a01",
+        "supersedes": {
+          "adoption": "20261009-r04-a01",
+          "candidateRevision": "assets/optimized-runtime/20261009-r04",
+          "url": "/models/obsidian-blade/model-c2.opt-2869bf2d3c3fff93.glb",
+          "sha256": "2869bf2d3c3fff93bbb9f6d50f8b1c70edaf926aa1192d70161a7050791e8c4d",
+          "bytes": 170456,
+          "lods": []
+        }
+      }
+    },
+    {
+      "modelKey": "meadow-sprig",
+      "name": "ぱらぱら草",
+      "kind": "foliage",
+      "candidate": 1,
+      "status": "reviewed-prototype",
+      "url": "/models/meadow-sprig/model.glb",
+      "sha256": "4a4c9060a5d95f0db3dcf3c4ff050c78c86f543b942ec62273471326959483de",
+      "bytes": 894776,
+      "triangles": 11546,
+      "upAxis": "Y",
+      "forwardAxis": "+Z",
+      "heightMetres": 0.45013082993318676,
+      "widthMetres": 0.5930159986019135,
+      "placement": {
+        "pivot": "ground-centred",
+        "min": [
+          -0.29650697112083435,
+          -0.00003288162042736076,
+          -0.04897920787334442
+        ],
+        "max": [
+          0.2965090274810791,
+          0.4500979483127594,
+          0.04895041882991791
+        ]
+      },
+      "clips": [],
+      "lods": [],
+      "provenance": {
+        "provider": "Claude Fable 5.1 (Claude Code)",
+        "claudeUsed": true,
+        "referenceGenerator": "Art-directed Blender 5.2 render",
+        "referenceImage": "output/model-generation/models/meadow-sprig/source/original/reference-v1.png",
+        "referenceSha256": "9e6c3c093a576e132f2e27bb63a447ca1557823431bed64caa03baea4d5987dc",
+        "reconstruction": "Local TRELLIS-2 1024, seed 42; source-derived weld + quadric reduction with retained UV/albedo, foliage-only albedo luminance calibration; no replacement geometry.",
+        "candidateFile": "output/model-generation/models/meadow-sprig/work/low-poly/candidate-04/candidate.glb",
+        "visualReview": "output/model-generation/models/meadow-sprig/qa/adoption-review-rev04.json"
+      }
+    }
+  ],
+  "productionSpecs": [
+    {
+      "key": "meadow-grass",
+      "name": "草の株",
+      "kind": "foliage",
+      "height": 0.55,
+      "status": "integrated-reviewed-prototype",
+      "subject": "Nine broad smooth grass blades without a root disc or pedestal.",
+      "geometryResolution": 1024,
+      "sha256": "24b41b18d4c5ea40ca660d7eda16f2154ca856828ebfc721d6c3489efe63f9c0",
+      "delivery": "/models/meadow-grass/model.glb"
+    },
+    {
+      "key": "meadow-sprig",
+      "name": "ぱらぱら草",
+      "kind": "foliage",
+      "height": 0.45,
+      "status": "integrated-reviewed-prototype",
+      "subject": "Sparse grass blades without a root disc or pedestal.",
+      "geometryResolution": 1024,
+      "sha256": "4a4c9060a5d95f0db3dcf3c4ff050c78c86f543b942ec62273471326959483de",
+      "delivery": "/models/meadow-sprig/model.glb",
+      "referenceVersion": 1
+    },
+    {
+      "key": "flint-spear",
+      "name": "石槍",
+      "kind": "equipment",
+      "height": 2.1,
+      "status": "integrated-reviewed-prototype",
+      "subject": "One single straight prehistoric hunting spear standing vertically, long sturdy brown wood shaft and a clearly visible pointed grey flint spearhead secured by compact thick sinew wrapping. Shaft thick enough to reconstruct, slight natural wooden irregularity, tip aligned with shaft, pointed flint visible from front and slight side. Entire spear from bottom to tip with generous margins. No hand, stand, pedestal, other weapon or shadow floor.",
+      "geometryResolution": 1024,
+      "sha256": "1a10db6d1b44da1e982f88e5ae9ef6be8fb74f5900ebd9258380ad200e53ed3d",
+      "delivery": "/models/flint-spear/model.glb"
+    },
+    {
+      "key": "cockle-shell",
+      "name": "浜の貝",
+      "kind": "static",
+      "height": 0.118,
+      "status": "remake-candidate-2-integrated",
+      "sha256": "dc8defa88c3a04a5c34f48b80d62ada720de98c6960349965a33d9fb79bab2fe",
+      "delivery": "/models/cockle-shell/model-c2.glb",
+      "modelWorkspace": "assets/coastal-craft/models/cockle-shell"
+    },
+    {
+      "key": "shell-midden",
+      "name": "貝塚",
+      "kind": "static",
+      "height": 0.392,
+      "status": "remake-candidate-2-integrated",
+      "sha256": "d45280c759dde06ac2a21b75b54953753648ff1585ba16319da7bf1e15bfa444",
+      "delivery": "/models/shell-midden/model-c2.glb",
+      "modelWorkspace": "assets/coastal-craft/models/shell-midden"
+    },
+    {
+      "key": "obsidian-blade",
+      "name": "黒曜石の刃",
+      "kind": "static",
+      "height": 0.290929,
+      "status": "remake-candidate-2-integrated",
+      "sha256": "87e6167887fdab6e2a0331837ef305b0470078b9e3afcd450dfae8ea1080b66b",
+      "delivery": "/models/obsidian-blade/model-c2.glb",
+      "modelWorkspace": "assets/coastal-craft/models/obsidian-blade"
+    }
+  ]
+}

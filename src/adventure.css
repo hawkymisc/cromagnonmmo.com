@@ -1,0 +1,17 @@
+.world-label.adventure-marker {
+  border: 1px solid #ceb68066;
+  border-radius: 5px;
+  background: #242e28cc;
+  color: #f8e4af;
+  padding: 5px 9px;
+  font-size: 11px;
+}
+.world-label.adventure-marker.visited {
+  border-color: #a5c19866;
+  color: #c8dfb7;
+}
+.world-label.rift-marker {
+  border-color: #a797e4aa;
+  background: #27243dd9;
+  color: #d5c7ff;
+}

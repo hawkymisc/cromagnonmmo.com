@@ -1,0 +1,11 @@
+title = "CRO-MAGNON secret scanning"
+
+[extend]
+useDefault = true
+
+# Exact public model/shader identifiers, not a file, directory, commit or rule exemption.
+[[rules]]
+id = "generic-api-key"
+  [[rules.allowlists]]
+  description = "Public model and shader identifiers"
+  regexes = ['''^(yellow-524-mascot|clothing-dye-1)$''']

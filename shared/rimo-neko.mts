@@ -1,0 +1,17 @@
+export const RIMO_NEKO = Object.freeze({
+  modelKey: 'rimo-neko',
+  radius: 0.3,
+  bodyHeight: 0.52,
+  headHeight: 0.47,
+  petRange: 2.6,
+  petCooldownMs: 1400,
+  petApproachMs: 4000,
+  petStrokeMs: 1600,
+  happyMs: 1600,
+  hitMs: 500,
+  hissMs: 2100,
+  impulse: 3.4,
+  damping: 7,
+  followDistance: 1.65,
+  followAcceleration: 4,
+});

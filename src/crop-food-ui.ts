@@ -1,0 +1,61 @@
+import { ROOT_RECIPES } from '../shared/crops.mjs';
+import { HUNTING, nearestCookingFire } from '../shared/hunting.mjs';
+import { interactionVisible } from '../shared/interactions.mjs';
+
+export function installCropFoodUI({ player, state, available, action, openModal, collision }) {
+  const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+  const button = (id, label) =>
+    `<button id="${id}" class="button button-outline">${label}</button>`;
+  const near = (a, b, range) =>
+    a && b && Math.hypot(a.x - b.x, a.z - b.z) <= range && interactionVisible(collision, a, b);
+  const close = () => (document.getElementById('modal') as HTMLDialogElement).close();
+  function open() {
+    openModal(
+      `<div id="crop-food-panel"><span class="eyebrow">畑から、炉のそばへ</span><h2>火根と香草の食事</h2><p id="crop-food-inventory"></p><div class="crop-recipes">${ROOT_RECIPES.map((r) => `<section class="gulf-card"><h3>${r.name}</h3><p>${r.costText} → ${r.name}1 · 元気+${r.energy}</p><p id="crop-stock-${r.kind}"></p><div class="gulf-actions">${button('crop-cook-' + r.kind, r.name + 'を作る')}${button('crop-eat-' + r.kind, r.name + 'を食べる')}</div></section>`).join('')}</div><p id="crop-food-hint" role="status"></p></div>`,
+    );
+    for (const r of ROOT_RECIPES) {
+      $('crop-cook-' + r.kind).onclick = () => {
+        close();
+        action(r.action);
+      };
+      $('crop-eat-' + r.kind).onclick = () => action(r.eatAction);
+    }
+    update();
+  }
+  function update() {
+    if (!$('crop-food-panel')) return;
+    const me = player(),
+      inv = me?.inventory ?? {},
+      world = state();
+    const blocked =
+      !available() ||
+      !me ||
+      !!me.downedUntil ||
+      !!me.mountId ||
+      !!me.boatId ||
+      !!me.cookingEndsAt ||
+      !!me.fishing ||
+      !!me.coastalActivity;
+    const fire = me && nearestCookingFire(world, me);
+    const atFire = near(me, fire, HUNTING.cookRange);
+    const enable = (id, yes) => ($<HTMLButtonElement>(id).disabled = !yes);
+    $('crop-food-inventory').textContent = `火根 ${inv.rawRoot ?? 0} · 香草 ${inv.herb ?? 0}`;
+    $('crop-food-hint').textContent = blocked
+      ? '今の作業を終えてから料理しよう。'
+      : !atFire
+        ? '焼くときは炉に近づこう。'
+        : '火のそばです。焼き方を選ぼう。';
+    for (const r of ROOT_RECIPES) {
+      $('crop-stock-' + r.kind).textContent = `持ち物：${inv[r.output] ?? 0}`;
+      enable(
+        'crop-cook-' + r.kind,
+        !blocked &&
+          atFire &&
+          (inv[r.output] ?? 0) < 99 &&
+          Object.entries(r.ingredients).every(([key, n]) => (inv[key] ?? 0) >= n),
+      );
+      enable('crop-eat-' + r.kind, !blocked && (inv[r.output] ?? 0) > 0 && me.energy < 100);
+    }
+  }
+  return { open, update };
+}

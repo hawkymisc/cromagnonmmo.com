@@ -1,0 +1,81 @@
+import http from 'node:http';
+import type { AddressInfo } from 'node:net';
+import { MIME, sendFailure, serveStatic } from './static-files.mjs';
+import { loopbackRequestHost } from './request-host.mjs';
+import type { ControllerLayout } from '../../shared/controller-layout.mjs';
+
+/** Assets are loopback-only. There is deliberately no WebSocket proxy here. */
+export function createExhibitionClient({
+  root,
+  port,
+  config,
+  getControllerLayout,
+}: {
+  root: string;
+  port: number;
+  config: {
+    mode: string;
+    serverUrl: string;
+    room?: string;
+    guestName?: string;
+    buildId?: string;
+    controllerLayout?: ControllerLayout;
+  };
+  getControllerLayout?: () => Promise<ControllerLayout>;
+}) {
+  const connectOrigin = new URL(config.serverUrl).origin;
+  const server = http.createServer(async (request, response) => {
+    response.setHeader('X-Content-Type-Options', 'nosniff');
+    response.setHeader('Cache-Control', 'no-store');
+    response.setHeader(
+      'Content-Security-Policy',
+      `default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' blob: ${connectOrigin}; font-src 'self'; media-src 'self' blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'`,
+    );
+    try {
+      if (!loopbackRequestHost(request.headers.host)) {
+        response.writeHead(403).end('Forbidden host');
+        return;
+      }
+      if (!['GET', 'HEAD'].includes(request.method || '')) {
+        response.writeHead(405, { Allow: 'GET, HEAD' }).end();
+        return;
+      }
+      const url = new URL(request.url || '/', 'http://localhost');
+      if (url.pathname === '/multiplayer-config.json' || url.pathname === '/api/status') {
+        const payload =
+          url.pathname === '/api/status'
+            ? { ok: true, mode: config.mode, buildId: config.buildId }
+            : {
+                ...config,
+                ...(getControllerLayout ? { controllerLayout: await getControllerLayout() } : {}),
+              };
+        response.writeHead(200, { 'Content-Type': MIME['.json'] });
+        response.end(request.method === 'HEAD' ? undefined : JSON.stringify(payload));
+        return;
+      }
+      await serveStatic(request, response, url.pathname, root);
+    } catch (error) {
+      sendFailure(response, error);
+    }
+  });
+  return {
+    server,
+    listen: () =>
+      new Promise<AddressInfo>((resolve, reject) => {
+        server.once('error', reject);
+        server.listen(port, '127.0.0.1', () => {
+          server.off('error', reject);
+          resolve(server.address() as AddressInfo);
+        });
+      }),
+    close: () =>
+      new Promise<void>((resolve, reject) => {
+        if (!server.listening) {
+          resolve();
+          return;
+        }
+        server.close((error) => (error ? reject(error) : resolve()));
+        server.closeIdleConnections();
+      }),
+  };
+}
