@@ -5,6 +5,7 @@
 - [リリースノート](releases.md)
 - [開発環境](DEVELOPMENT.md)
 - [アーキテクチャ](ARCHITECTURE.md)
+- [マルチプレイ化の設計レビューと計画](multiplayer-plan.md)
 - [性能の確認](performance.md)
 - [Cloudflareへのデプロイ](CLOUDFLARE_DEPLOYMENT.md)
 - [公開3Dモデル](meshmell-upload.md)
