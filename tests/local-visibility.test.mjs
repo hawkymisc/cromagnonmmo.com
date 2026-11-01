@@ -15,6 +15,7 @@ import { readLocalVisibility } from '../dist/infrastructure/node/local-visibilit
 import { chooseMascot } from '../dist/shared/mascot-selection.mjs';
 import { ALL_CONTENT } from '../dist/shared/content-visibility.mjs';
 import { modelFiles } from './helpers/production-files.mjs';
+import { savedSessions } from './helpers/save-format.mjs';
 
 const hidden = { hiddenCharacters: ['maruimo', 'howkey'], hideMae: true };
 // These tests exercise the independent local switches with the retained cast enabled.
@@ -118,11 +119,11 @@ for (const species of ['maruimo'])
     assert.equal(b.player.species, 'cro');
     assert.deepEqual(progress(b.player), originalProgress);
     const saved = concealed.core.exportState();
-    assert.equal(saved.rooms[0].sessions[0].player.mascot, 'mae');
+    assert.equal(savedSessions(saved)[0].player.mascot, 'mae');
     assert.deepEqual(b.room.companions, []);
     assert.equal('mae' in saved.rooms[0], false);
-    assert.equal(saved.rooms[0].sessions[0].player.unavailableCharacter.species, species);
-    assert.equal(checkpoint.rooms[0].sessions[0].player.species, species);
+    assert.equal(savedSessions(saved)[0].player.unavailableCharacter.species, species);
+    assert.equal(savedSessions(checkpoint)[0].player.species, species);
     act(b.socket, 'changeCharacter', species === 'howkey' ? 'howkey-scientist' : 'maruimo-octopus');
     concealed.advance();
     assert.equal(b.player.species, 'cro');
@@ -332,7 +333,7 @@ for (const species of ['maruimo'])
     await game.saveNow();
     await game.close();
     const bytes = JSON.parse(await readFile(path.join(saveDirectory, 'world.json'), 'utf8'));
-    assert.equal(bytes.state.rooms[0].sessions[0].player.mascot, 'mae');
+    assert.equal(savedSessions(bytes.state)[0].player.mascot, 'mae');
     assert.equal('mae' in bytes.state.rooms[0], false);
     game = await createPersistentGameServer({ saveDirectory, port: 0 });
     assert.deepEqual(game.rooms.get('VISIBILITY').companions, []);

@@ -12,6 +12,7 @@ import { createPersistentGameServer } from '../dist/server.mjs';
 import { createGameCore } from '../dist/application/game-core.mjs';
 import { openLocalSave, UnsupportedSaveError } from '../dist/infrastructure/node/local-save.mjs';
 import { createSessionStore } from '../dist/src/session-storage.js';
+import { savedSessions } from './helpers/save-format.mjs';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function until(check, timeout = 6000) {
@@ -167,7 +168,7 @@ test('persistent core retains 111 profiles and empty shared rooms without offlin
   now += 365 * 86400000;
   core.tick();
   assert.equal(room.sessions.size, 111);
-  assert.equal(core.exportState().rooms[0].sessions.length, 111);
+  assert.equal(savedSessions(core.exportState()).length, 111);
   assert.deepEqual(
     core.exportState().rooms[0].residents.map((r) => ({
       forage: r.forage,
@@ -192,7 +193,7 @@ test('persistent core retains 111 profiles and empty shared rooms without offlin
     assert.equal(restored.rooms.get('SAVE').players.get(c.welcome.id).inventory.obsidian, i % 99);
     c.socket.close();
   }
-  assert.equal(before.rooms[0].sessions.length, 111);
+  assert.equal(savedSessions(before).length, 111);
   core.close();
   restored.close();
 });
@@ -280,7 +281,7 @@ test('disk restart restores shared and personal records, freezes shutdown input,
   const closing = reopened.close();
   resumed.socket.send(JSON.stringify({ type: 'move', dx: 1, dz: 0 }));
   await closing;
-  assert.equal(JSON.parse(await bytes(dir)).state.rooms[0].sessions[0].player.dx, 0);
+  assert.equal(savedSessions(JSON.parse(await bytes(dir)).state)[0].player.dx, 0);
 });
 
 test('title leave retains progress; explicit character change discards it; save failures reach clients', async (t) => {
@@ -467,8 +468,8 @@ test('normal executable saves through parent IPC and survives a forced process e
   child.send('cro-shutdown');
   assert.equal((await exited)[0], 0);
   const checkpoint = JSON.parse(await bytes(dir));
-  assert.equal(checkpoint.state.rooms[0].sessions[0].token, token);
-  const firstPosition = checkpoint.state.rooms[0].sessions[0].player.x;
+  assert.equal(savedSessions(checkpoint.state)[0].token, token);
+  const firstPosition = savedSessions(checkpoint.state)[0].player.x;
   child = await start();
   client = await join(proxy, token);
   assert.equal(client.welcome.resumed, true);

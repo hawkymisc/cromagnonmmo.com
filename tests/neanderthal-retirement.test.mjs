@@ -15,6 +15,7 @@ import { WorldAssets } from '../dist/src/world-assets.js';
 import { WorldRenderer } from '../dist/src/world3d.js';
 import { ActorResidency } from '../dist/src/actor-residency.js';
 import { modelFiles } from './helpers/production-files.mjs';
+import { savedSessions } from './helpers/save-format.mjs';
 
 class Socket extends EventEmitter {
   readyState = 1;
@@ -70,7 +71,7 @@ test('old appearances survive repeated saves, restore when enabled, and reject f
     a.player.gathered = 42;
     // A checkpoint from before the exclusion, entirely in memory.
     const checkpoint = original.exportState();
-    const oldPlayer = checkpoint.rooms[0].sessions[0].player;
+    const oldPlayer = savedSessions(checkpoint)[0].player;
     Object.assign(oldPlayer, { species: 'nea', gender });
     delete oldPlayer.unavailableCharacter;
     original.close();
@@ -105,7 +106,7 @@ test('old appearances survive repeated saves, restore when enabled, and reject f
     const saved = concealed.exportState();
     const again = fixture();
     again.importState(saved);
-    assert.deepEqual(again.exportState().rooms[0].sessions[0].player.unavailableCharacter, {
+    assert.deepEqual(savedSessions(again.exportState())[0].player.unavailableCharacter, {
       species: 'nea',
       gender,
       character: gender === 'male' ? 'neanderthal-hunter' : 'neanderthal-woman',

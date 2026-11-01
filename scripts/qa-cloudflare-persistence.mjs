@@ -2,6 +2,7 @@ import { Miniflare, convertV4MiniflareOptions } from 'miniflare';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { freshBudget } from '../dist/cloudflare/free-budget.mjs';
+import { savedMembers } from '../dist/application/save-format.mjs';
 
 const mf = new Miniflare({ ...convertV4MiniflareOptions({ name: 'game-test', modules: true,
   scriptPath: process.argv[2] || 'output/cloudflare-dry-run/worker.js', compatibilityDate: '2026-09-07',
@@ -29,7 +30,7 @@ try {
     await mf.unsafeEvictDurableObject('game-test', 'FreeGameRoom', { name: 'EMBER', webSockets: 'close' });
   };
   let saved = await read();
-  saved.game.rooms[0].sessions[0].player.inventory.wood = 11;
+  savedMembers(saved.game)[0].player.inventory.wood = 11;
   saved.game.rooms[0].camp.wood = 8;
   saved.game.worldVersion = 2;
   for (const field of ['gulf', 'boats', 'residents', 'households', 'companion524', 'rimoNeko'])
@@ -47,7 +48,7 @@ try {
   for (const [field, value] of [['activeMs', 12 * 3600000], ['connections', 2000], ['writes', 20000]]) {
     saved = structuredClone(baseline); saved.budget = { ...freshBudget(), [field]: value }; await seed(saved);
     const refused = await open(welcome.session); assert.equal(refused.response.status, 503, field);
-    assert.equal((await read()).game.rooms[0].sessions[0].player.inventory.wood, 11);
+    assert.equal(savedMembers((await read()).game)[0].player.inventory.wood, 11);
   }
   saved = structuredClone(baseline); saved.budget = { ...freshBudget(), messages: 400000 }; await seed(saved);
   client = await open(welcome.session); await client.wait(m => m.type === 'welcome');
@@ -58,7 +59,7 @@ try {
   saved = structuredClone(baseline); saved.budget = freshBudget(); await seed(saved);
   await storage.exec("CREATE TRIGGER fail_save BEFORE INSERT ON checkpoint BEGIN SELECT RAISE(ABORT, 'injected storage failure'); END");
   const failed = await open(welcome.session); assert.equal(failed.response.status, 503);
-  assert.equal((await read()).game.rooms[0].sessions[0].player.inventory.wood, 11);
+  assert.equal(savedMembers((await read()).game)[0].player.inventory.wood, 11);
   const result = { checkedAt: new Date().toISOString(), status: 'passed', actualSqliteRestore: true,
     legacyVersion2Restored: true, legacyCheckpointBackupExact: true,
     inventoryAndCampRestored: true, activeTimeLimit: true, connectionLimit: true, writeLimit: true,

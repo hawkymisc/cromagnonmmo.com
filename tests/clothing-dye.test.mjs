@@ -34,6 +34,7 @@ import {
   publicModelRules,
 } from '../scripts/public-character-audit.mjs';
 import { modelFiles } from './helpers/production-files.mjs';
+import { savedSessions } from './helpers/save-format.mjs';
 
 test('public clothing rules retain released dyes while excluding private and dormant characters', () => {
   const characters = CHARACTER_MODELS.filter(
@@ -189,7 +190,7 @@ test('a dye is kept with the player across a restart and cleaned when restored',
   w.dye(a, 'yellow');
   a.socket.close();
   const saved = w.restart();
-  const entry = saved.rooms[0].sessions.find((s) => s.player.id === a.id);
+  const entry = savedSessions(saved).find((s) => s.player.id === a.id);
   assert.equal(entry.player.dye, 'yellow');
   assert.ok(!('lastDyeAt' in entry.player), 'the cooldown is not saved');
   const back = w.join('A', { session: a.session });
@@ -198,7 +199,7 @@ test('a dye is kept with the player across a restart and cleaned when restored',
   // A save edited by hand, or from another build, restores only known dyes.
   back.socket.close();
   const edited = w.restart();
-  edited.rooms[0].sessions.find((s) => s.player.id === a.id).player.dye = 'gold';
+  savedSessions(edited).find((s) => s.player.id === a.id).player.dye = 'gold';
   const core = createGameCore({ persistentSessions: true, keepEmptyRooms: true });
   core.importState(edited);
   const restored = [...core.rooms.values()][0].sessions;

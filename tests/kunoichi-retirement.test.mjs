@@ -11,6 +11,7 @@ import { createGameCore } from '../dist/application/game-core.mjs';
 import { createGameServer } from '../dist/server.mjs';
 import { WorldAssets } from '../dist/src/world-assets.js';
 import { modelFiles } from './helpers/production-files.mjs';
+import { savedSessions } from './helpers/save-format.mjs';
 
 const retained = CHARACTER_ROSTER.find((entry) => entry.species === 'cat');
 class Socket extends EventEmitter {
@@ -86,7 +87,7 @@ test('joining and forged switches cannot select the kunoichi; saved identity and
   t.after(() => again.close());
   again.importState(resumed.exportState());
   assert.equal(
-    again.exportState().rooms[0].sessions[0].player.unavailableCharacter.character,
+    savedSessions(again.exportState())[0].player.unavailableCharacter.character,
     'cat-kunoichi',
   );
   assert.ok(

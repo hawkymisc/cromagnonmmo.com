@@ -12,6 +12,7 @@ import { handleOrbBotAction, ORB_BOTS } from '../dist/shared/orb-bots.mjs';
 import { STARTING_MASCOTS, startingMascotMarkup } from '../dist/src/starting-mascot.js';
 import { mascotMenuMarkup } from '../dist/src/mascot-menu.js';
 import { SoloRuntime } from '../dist/infrastructure/browser/solo-runtime.mjs';
+import { savedSessions } from './helpers/save-format.mjs';
 
 test('solo add/remove/all keeps every selected body, cancels only its farewell, and saves the whole party', (t) => {
   const w = mascotCore(t, { multiMascots: true });
@@ -118,21 +119,21 @@ test('browser runtime migrates a single choice, persists multi selection immedia
   let game = new SoloRuntime(save, () => {});
   await game.start({ name: 'Solo', mascot: '524' });
   await game.close();
-  delete save.data.game.rooms[0].sessions[0].player.mascots; // A fixture of the former save format.
+  delete savedSessions(save.data.game)[0].player.mascots; // A fixture of the former save format.
   const out = [];
   game = new SoloRuntime(save, (event) => out.push(event));
   await game.start({ name: 'Solo', mascot: 'keep' });
-  assert.deepEqual(save.data.game.rooms[0].sessions[0].player.mascots, ['524']);
+  assert.deepEqual(savedSessions(save.data.game)[0].player.mascots, ['524']);
   await game.command(JSON.stringify({ type: 'action', action: 'selectMascot', targetId: 'heart' }));
-  assert.deepEqual(save.data.game.rooms[0].sessions[0].player.mascots, ['524', 'heart']);
+  assert.deepEqual(savedSessions(save.data.game)[0].player.mascots, ['524', 'heart']);
   await game.close();
   game = new SoloRuntime(save, () => {});
   await game.start({ name: 'Solo', mascot: 'keep' });
-  assert.deepEqual(save.data.game.rooms[0].sessions[0].player.mascots, ['524', 'heart']);
+  assert.deepEqual(savedSessions(save.data.game)[0].player.mascots, ['524', 'heart']);
   await game.close();
   game = new SoloRuntime(save, () => {});
   await game.start({ name: 'Solo', mascot: 'none' });
-  assert.deepEqual(save.data.game.rooms[0].sessions[0].player.mascots, []);
+  assert.deepEqual(savedSessions(save.data.game)[0].player.mascots, []);
   await game.close();
 });
 

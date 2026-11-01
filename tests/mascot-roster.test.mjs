@@ -15,6 +15,7 @@ import { createHash } from 'node:crypto';
 import { mascotCore } from './mascot-fixture.mjs';
 import { runtimeTextureRecords } from '../scripts/environment-assets.mjs';
 import { modelFiles } from './helpers/production-files.mjs';
+import { savedSessions } from './helpers/save-format.mjs';
 
 class Socket extends EventEmitter {
   readyState = 1;
@@ -83,7 +84,7 @@ test('each dormant selection survives hidden saves and appears only when enabled
       assert.deepEqual(w.room().companions, []);
       assert.deepEqual(w.room().orbBots, []);
       saved = w.core().exportState();
-      assert.equal(saved.rooms[0].sessions[0].player.mascot, key);
+      assert.equal(savedSessions(saved)[0].player.mascot, key);
       for (const field of ['mae', 'kohaku', 'maruimo', 'friends', 'companions', 'orbBots'])
         assert.equal(field in saved.rooms[0], false, field);
     }
@@ -150,7 +151,7 @@ test('Howkey is a dormant mascot using its unchanged rig, and old player saves k
     );
   const source = fixture();
   const saved = source.core.exportState();
-  const player = saved.rooms[0].sessions[0].player;
+  const player = savedSessions(saved)[0].player;
   Object.assign(player, { species: 'howkey', gender: 'female' });
   player.inventory.wood = 13;
   const restored = createGameCore({ persistentSessions: true });

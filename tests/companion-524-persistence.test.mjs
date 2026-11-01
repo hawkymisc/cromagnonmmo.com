@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mascotCore, distance } from './mascot-fixture.mjs';
 import { mascotKeyOf, formerMascotBonds } from '../dist/shared/mascot-selection.mjs';
+import { legacySave, savedSessions } from './helpers/save-format.mjs';
 
 for (const key of ['524', 'rimo-neko', 'white'])
   for (const mode of [
@@ -41,7 +42,7 @@ for (const key of ['524', 'rimo-neko', 'white'])
           copy = structuredClone(saved);
         for (const field of ['companions', 'orbBots', 'companion524', 'rimoNeko', 'mae', 'friends'])
           assert.ok(!(field in saved.rooms[0]), field);
-        assert.equal(saved.rooms[0].sessions[0].player.mascot, key);
+        assert.equal(savedSessions(saved)[0].player.mascot, key);
         w.load(saved);
         assert.deepEqual(saved, copy);
         assert.deepEqual(w.room().companions, []);
@@ -74,7 +75,7 @@ test('old shared bodies migrate known owners in card order; absent owners and in
   const w = mascotCore(t),
     a = w.join('A'),
     b = w.join('B');
-  const saved = w.core().exportState(),
+  const saved = legacySave(w.core().exportState()),
     r = saved.rooms[0];
   for (const s of r.sessions) delete s.player.mascot;
   r.rimoNeko = { followPlayerId: a.id };

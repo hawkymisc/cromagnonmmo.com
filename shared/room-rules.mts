@@ -1,3 +1,4 @@
+import { IDLE_TIMEOUT_MS } from './player-inactivity.mjs';
 // Per-room tuning. The exhibition floor restores fallen players fully and
 // brings every creature back within seconds so a short visit always has
 // something to fight. Null fields mean "use the creature's own constant".
@@ -30,6 +31,12 @@ export type RoomRules = {
   spawnChoice: boolean;
   /** Players' blows knock other players back without costing them energy (MMO, 2026-10-12). */
   playerKnockback: boolean;
+  /** A connected player with no input for this long leaves the room; null never removes them. */
+  idleTimeoutMs: number | null;
+  /** People at once in this room; null uses the host's limit. Never above the host's limit. */
+  playerLimit: number | null;
+  /** A newcomer may bring a character record from their own solo save (a trusted home LAN). */
+  acceptCarriedProfiles: boolean;
 };
 export const DEFAULT_RULES: RoomRules = Object.freeze({
   recoveryEnergy: 50,
@@ -45,6 +52,19 @@ export const DEFAULT_RULES: RoomRules = Object.freeze({
   crowMinionsOneBlow: false,
   spawnChoice: false,
   playerKnockback: true,
+  idleTimeoutMs: IDLE_TIMEOUT_MS,
+  playerLimit: null,
+  acceptCarriedProfiles: false,
+});
+/**
+ * A room shared by people in the same house or on the same LAN: nobody is sent away for
+ * stepping out, a few more can join, and each may bring the character from their solo save.
+ */
+export const HOME_RULES: RoomRules = Object.freeze({
+  ...DEFAULT_RULES,
+  idleTimeoutMs: null,
+  playerLimit: 8,
+  acceptCarriedProfiles: true,
 });
 export const EXHIBITION_RULES: RoomRules = Object.freeze({
   recoveryEnergy: 100,
@@ -61,12 +81,18 @@ export const EXHIBITION_RULES: RoomRules = Object.freeze({
   spawnChoice: true,
   // The finished exhibition keeps its recorded rules: a blow passes other players by.
   playerKnockback: false,
+  idleTimeoutMs: IDLE_TIMEOUT_MS,
+  playerLimit: null,
+  acceptCarriedProfiles: false,
 });
 // Fixtures and old saves may carry only some fields.
 export const roomRules = (room): RoomRules => ({ ...DEFAULT_RULES, ...room?.rules });
 export const respawnDelay = (room, fallback: number) => room.rules?.respawnMs ?? fallback;
 /** The part of the rules a client needs to predict its own movement and gait. */
 export const clientRules = (room) => {
-  const { alwaysRun, speedScale, spawnChoice } = roomRules(room);
-  return { alwaysRun, speedScale, spawnChoice };
+  const { alwaysRun, speedScale, spawnChoice, idleTimeoutMs } = roomRules(room);
+  return { alwaysRun, speedScale, spawnChoice, idleTimeoutMs };
 };
+/** The room's own limit within the host's: rules may lower it, never raise it. */
+export const roomPlayerLimit = (room, hostLimit: number) =>
+  Math.max(1, Math.min(hostLimit, roomRules(room).playerLimit ?? hostLimit));

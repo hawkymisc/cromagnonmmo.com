@@ -6,9 +6,12 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const localVerification = process.argv.includes('--local');
+// --lan serves the shared room to this network (scripts/start-lan.mjs, docs/lan-play.md).
 const serverEnv = localVerification
   ? { ...process.env, CRO_ENVIRONMENT: 'local', EXHIBITION_RULES: '0' }
-  : process.env;
+  : process.argv.includes('--lan')
+    ? { ...process.env, CRO_MULTIPLAYER: 'lan' }
+    : process.env;
 let server,
   builder,
   timer,

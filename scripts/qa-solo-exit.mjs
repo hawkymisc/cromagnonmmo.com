@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { enterPreparedWorld } from './qa-game-entry.mjs';
 import { publicAssets } from './qa-static-server.mjs';
+import { savedMembers } from '../dist/application/save-format.mjs';
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const output = process.argv[2] || 'output/playwright/solo-exit';
 const publicArg = process.argv.find((arg) => arg.startsWith('--public='));
@@ -139,8 +140,8 @@ try {
       !(await navigator.locks.query()).held.some((lock) => lock.name === 'cro-magnon-solo-play'),
   );
   const after = await checkpoint();
-  const original = JSON.parse(before.payload).game.rooms[0].sessions[0].player;
-  const saved = JSON.parse(after.payload).game.rooms[0].sessions[0].player;
+  const original = savedMembers(JSON.parse(before.payload).game)[0].player;
+  const saved = savedMembers(JSON.parse(after.payload).game)[0].player;
   assert.equal(saved.id, original.id);
   assert.deepEqual(saved.inventory, original.inventory);
   assert.equal(saved.mascot, original.mascot);

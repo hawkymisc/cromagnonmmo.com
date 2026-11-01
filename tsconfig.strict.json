@@ -11,6 +11,8 @@
     "shared/environment-profile.mts",
     "application/ports.mts",
     "application/protocol.mts",
+    "application/identity.mts",
+    "application/save-format.mts",
     "src/three-types.ts",
     "src/science-cast.ts",
     "src/octopus-pose.ts",

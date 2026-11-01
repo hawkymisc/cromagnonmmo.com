@@ -18,14 +18,18 @@ Node.js 26ではCorepackを別途インストールしてください。詳し�
 
 | 変数                | 既定                | 用途                                                                      |
 | ------------------- | ------------------- | ------------------------------------------------------------------------- |
-| `HOST`              | `127.0.0.1`         | 待受先。同一LANの実機から確かめるときだけ `0.0.0.0` を指定                |
+| `HOST`              | `127.0.0.1`         | 待受先。同一LANの実機から確かめるときだけ `0.0.0.0` を指定（`start:lan` の既定は `0.0.0.0`） |
 | `PORT`              | `3000`              | 開発サーバーのポート                                                      |
 | `CRO_SAVE_DIR`      | `.cro-magnon-save/` | Node側の既存オンライン機能の保存先。現在のソロ保存はブラウザーのIndexedDB |
 | `CRO_DELIVERY`      | 配信用変換を使用    | `masters` を指定すると配信用変換を省略。通常は変更不要                    |
 | `PLAYWRIGHT_MODULE` | `playwright`        | 一部のQAスクリプトで使う任意のモジュール指定。通常は変更不要              |
+| `CRO_MULTIPLAYER`   | なし                | `lan` で同じLANの共有の部屋を配信。`pnpm run start:lan` と `dev:lan` が設定 |
+| `CRO_ROOM`          | `HOME`              | LANの部屋のコードの初期値                                                 |
+| `CRO_PLAYER_LIMIT`  | `8`                 | LANの部屋の最大人数（1〜64）                                              |
 
 POSIXシェル：`PORT=3100 pnpm run dev`。PowerShell：`$env:PORT='3100'; pnpm run dev`。
 `HOST=0.0.0.0` のサーバーは認証付きの公開サービスではありません。信頼できるLAN内の検証に限って使ってください。
+家やLANでみんなで遊ぶ手順は [家やLANでみんなで遊ぶ](lan-play.md) にあります。ブラウザーで流れを確かめる `node scripts/qa-lan-play.mjs`（`pnpm run build` の後）は、ホストのPCとLANのアドレスのスマートフォンを同じ部屋に入れます。Chromeがない環境では `QA_BROWSER_CHANNEL=` を付けるとPlaywright同梱のChromiumを使います。
 既定のループバック待受では `localhost`・`127.0.0.1`・`[::1]` 以外のHostヘッダーを拒否します。
 
 Cloudflareのデプロイは別作業です。手元の起動やCIにCloudflareの認証は不要です。

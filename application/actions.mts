@@ -36,7 +36,7 @@ const distance = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 export function createActionHandler({
   notice: sendNotice,
   broadcast,
-  snapshot,
+  markDirty,
   systemChat,
   runtime,
   visibility = ALL_CONTENT,
@@ -52,13 +52,13 @@ export function createActionHandler({
     if (action === 'contribute') return;
     if (action === 'equipItem') {
       const result = equipItem(player, message.targetId, now);
-      if (result.ok) broadcast(room, snapshot(room, true));
+      if (result.ok) markDirty(room, true);
       reply(player, { type: 'equipmentResult', itemId: message.targetId, ...result });
       return;
     }
     if (action === 'inventoryCraft') {
       const result = craftInventory(room, player, message.targetId, now);
-      if (result.ok) broadcast(room, snapshot(room, true));
+      if (result.ok) markDirty(room, true);
       reply(player, { type: 'inventoryCraftResult', recipeId: message.targetId, ...result });
       return;
     }
@@ -84,7 +84,7 @@ export function createActionHandler({
             action === 'selectMascot' ? (message.targetId ?? '') : null,
             now,
           );
-      if (changed) broadcast(room, snapshot(room));
+      if (changed) markDirty(room);
       return;
     }
     // One of the clothing dyes, or the character's own colours ('' or anything unknown).
@@ -94,18 +94,17 @@ export function createActionHandler({
         return;
       player.lastDyeAt = now;
       player.dye = dye;
-      broadcast(room, snapshot(room));
+      markDirty(room);
       return;
     }
     if (action === 'toggleCaveTorch') {
-      if (toggleCaveTorch(player)) broadcast(room, snapshot(room));
+      if (toggleCaveTorch(player)) markDirty(room);
       return;
     }
     if (['throwBot', 'recallBots', 'cancelBotThrows'].includes(action)) {
       // Calling one's companion ends one's own stroke of any companion.
       if (action === 'recallBots') cancelMascotPets(room, player.id, now);
-      if (handleOrbBotAction(room, player, action, message.targetId, now))
-        broadcast(room, snapshot(room));
+      if (handleOrbBotAction(room, player, action, message.targetId, now)) markDirty(room);
       return;
     }
     // A held companion never occupies the hand during another action.
@@ -115,7 +114,7 @@ export function createActionHandler({
     if (action === 'petMascot') {
       if (petMascot(room, player, message.targetId, now)) {
         stopActor(player);
-        broadcast(room, snapshot(room));
+        markDirty(room);
       }
       return;
     }
@@ -126,14 +125,14 @@ export function createActionHandler({
       sendNotice(player, result.text, result.ok ? 'success' : 'error', true);
       if (result.ok) {
         delete player.unavailableCharacter;
-        broadcast(room, snapshot(room, true));
+        markDirty(room, true);
       }
       return;
     }
     if (action === 'warp') {
       const result = handleWarpAction(room, player, message, now);
       sendNotice(player, result.text, result.ok ? 'success' : 'error', true);
-      if (result.ok) broadcast(room, snapshot(room, true));
+      if (result.ok) markDirty(room, true);
       return;
     }
     const carry = handleCarryAction(room, player, message, now);
@@ -142,7 +141,7 @@ export function createActionHandler({
         // Neither party can keep a trade open while being picked up.
         if (player.carrierId)
           cancelBarter(room, player.carrierId, now, '肩に担いだので交換を中止しました。');
-        broadcast(room, snapshot(room));
+        markDirty(room);
       }
       if (carry.text) notice(player, carry.text, carry.tone, !carry.changed);
       return;
@@ -158,7 +157,7 @@ export function createActionHandler({
       player.cookingEndsAt = 0;
       player.jumpAt = now;
       player.jumpSequence = (player.jumpSequence ?? 0) + 1;
-      broadcast(room, snapshot(room));
+      markDirty(room);
       return;
     }
     if (jumpProgress(player, now) !== null) {
@@ -173,7 +172,7 @@ export function createActionHandler({
     const coastal = handleCoastalAction(room, player, message, now);
     if (coastal) {
       if (coastal.text) notice(player, coastal.text, coastal.tone, !coastal.changed);
-      if (coastal.changed) broadcast(room, snapshot(room, true));
+      if (coastal.changed) markDirty(room, true);
       return;
     }
     if (player.coastalActivity && action !== 'cancelFishing')
@@ -181,53 +180,53 @@ export function createActionHandler({
     const fishing = handleFishingAction(room, player, message, now);
     if (fishing) {
       if (fishing.text) notice(player, fishing.text, fishing.tone, !fishing.changed);
-      if (fishing.changed) broadcast(room, snapshot(room, true));
+      if (fishing.changed) markDirty(room, true);
       return;
     }
     if (player.fishing) return notice(player, '魚を待っています。先にE／×で中止しよう。');
     const boating = handleBoatAction(room, player, message, now);
     if (boating) {
       notice(player, boating.text, boating.tone, !boating.changed);
-      if (boating.changed) broadcast(room, snapshot(room, true));
+      if (boating.changed) markDirty(room, true);
       return;
     }
     if (player.boatId) return notice(player, '乗船中です。岸で B を押して降りてから行おう。');
     const riding = handleRidingAction(room, player, message, now);
     if (riding) {
       notice(player, riding.text, riding.tone, !riding.changed);
-      if (riding.changed) broadcast(room, snapshot(room));
+      if (riding.changed) markDirty(room);
       return;
     }
     if (player.mountId) return notice(player, '騎乗中です。攻撃・採集・食事は R で降りてから。');
     const hunting = handleHuntingAction(room, player, message, now);
     if (hunting) {
       notice(player, hunting.text, hunting.tone, action !== 'attack' && !hunting.changed);
-      if (hunting.changed) broadcast(room, snapshot(room));
+      if (hunting.changed) markDirty(room);
       return;
     }
     if (player.cookingEndsAt) return notice(player, '調理中です。先に調理を終えるか中止しよう。');
     if (player.attackSequence && now - player.attackAt < attackProfile(player).durationMs)
       return notice(player, '攻撃が終わってから行おう。');
     if (action === 'toggleCaveFire') {
-      if (toggleCaveFire(room, player)) broadcast(room, snapshot(room, true));
+      if (toggleCaveFire(room, player)) markDirty(room, true);
       return;
     }
     const village = handleVillageAction(room, player, message, now);
     if (village) {
       notice(player, village.text, village.ok ? 'success' : 'info');
-      if (village.ok) broadcast(room, snapshot(room));
+      if (village.ok) markDirty(room);
       return;
     }
     const gulf = handleGulfAction(room, player, message, now);
     if (gulf) {
       notice(player, gulf.text, gulf.ok ? 'success' : 'info');
-      if (gulf.ok) broadcast(room, snapshot(room, true));
+      if (gulf.ok) markDirty(room, true);
       return;
     }
     const adventure = handleAdventureAction(room, player, message, now);
     if (adventure) {
       notice(player, adventure.text, adventure.ok ? 'success' : 'info');
-      if (adventure.ok) broadcast(room, snapshot(room, true));
+      if (adventure.ok) markDirty(room, true);
       return;
     }
     if (action === 'gather') {
@@ -311,6 +310,6 @@ export function createActionHandler({
       broadcast(room, { type: 'emote', id: player.id, emote: 'wave', at: runtime.now() });
       systemChat(room, `${player.name} が手を振った。`);
     } else return;
-    broadcast(room, snapshot(room, true));
+    markDirty(room, true);
   };
 }

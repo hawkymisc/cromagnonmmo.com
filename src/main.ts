@@ -27,7 +27,20 @@ import {
   loadMultiplayerConfig,
   multiplayerUrl,
   multiplayerSessionKey,
+  offersSharedPlay,
 } from './multiplayer-config.js';
+import { browserIdentity } from './net/identity.js';
+import { GameSocket } from './net/game-socket.js';
+import { applyFrame, isWorldFrame } from './net/state-store.js';
+import {
+  characterCard,
+  downloadCharacterCard,
+  parseCharacterCard,
+  rememberSoloCharacter,
+  rememberedSoloCharacter,
+  type CharacterCard,
+} from './net/character-card.js';
+import { qrSvg } from './qr-code.js';
 import type { ViewState } from './view-state.js';
 import { normalizeCharacter, characterModel } from '../shared/characters.mjs';
 import { attackProfile } from '../shared/combat-profiles.mjs';
@@ -139,7 +152,9 @@ import { icon } from './icons.js';
 import { installInventoryCrafting } from './inventory-crafting-ui.js';
 import {
   GAME_TITLE,
+  bindTitlePlayModes,
   modalMarkup,
+  takeSetupRequest,
   takeTitleShell,
   titleScreenMarkup,
   titleShellConfig,
@@ -249,13 +264,28 @@ document.body.classList.toggle('touch-mode', touchMode());
 let selectedAnimalId = null,
   stateReceivedAt = performance.now(),
   hurtUntil = 0;
+/** A solo character chosen on the setup screen for the next join (src/net/character-card.ts). */
+let pendingCarry: CharacterCard | null = null;
+let soloRememberedAt = -Infinity;
+/** Keep the solo character on this page, so a shared room here can take it along. */
+function rememberSolo(force = false) {
+  const now = performance.now();
+  if ((!force && now - soloRememberedAt < 5000) || !player()) return;
+  soloRememberedAt = now;
+  rememberSoloCharacter(characterCard(player()), () => localStorage);
+}
+// The shared room of a LAN host offers to bring a solo character (docs/lan-play.md).
+const carryFields = () =>
+  !solo && !fixedIdentity && offersSharedPlay(multiplayer)
+    ? `<fieldset class="setup-carry" id="setup-carry"><legend>ソロのキャラクターを連れていく</legend><p class="form-note">持ち物・道具・探索の記録を、この部屋のあなたに写します。ソロの保存はそのまま残ります。この部屋にすでにあなたがいるときは使いません。</p><label class="setup-carry-choice" id="carry-remembered-choice" hidden><input type="checkbox" id="carry-remembered"> <span id="carry-remembered-label"></span></label><label class="setup-carry-file">書き出したファイルから選ぶ<input type="file" id="carry-file" accept="application/json,.json"></label><p id="carry-status" class="form-note" role="status"></p></fieldset>`
+    : '';
 
 const joinFields = () =>
   (fixedIdentity
     ? `<input type="hidden" name="name"><input type="hidden" name="room">`
     : solo
       ? `<div class="setup-identity solo-identity"><label>あなたの名前<input name="name" maxlength="16" required autocomplete="off" autofocus></label><input type="hidden" name="room" value="SOLO"></div>`
-      : `<div class="setup-identity"><label>あなたの名前<input name="name" maxlength="16" required autocomplete="off" autofocus></label><label>部屋のコード<span>英数字・ハイフン・アンダースコア / 最大16文字</span><input name="room" maxlength="16" pattern="[A-Za-z0-9_\\-]+" required autocomplete="off"></label></div>`) +
+      : `<div class="setup-identity"><label>あなたの名前<input name="name" maxlength="16" required autocomplete="off" autofocus></label><label>部屋のコード<span>英数字・ハイフン・アンダースコア / 最大16文字</span><input name="room" maxlength="16" pattern="[A-Za-z0-9_\\-]+" required autocomplete="off"></label></div>${carryFields()}`) +
   characterPickerMarkup(fixedIdentity ? null : profile.dye, 'setup-flow-yes', '次へ');
 // Keep the title and its ancestors mounted: even moving the same image/title to a
 // new viewport restarts the CSS fades, briefly making the artwork transparent.
@@ -955,15 +985,23 @@ async function connect(automatic = false) {
   }
   if (attempt !== connectAttempt || manualLeave) return;
   startupMarks.mark('status', marks);
-  const connectionProfile = {
+  // The same browser is the same person in every room of a host (src/net/identity.ts).
+  const identity = await browserIdentity().catch(() => null);
+  if (attempt !== connectAttempt || manualLeave) return;
+  const { session, ...visibleProfile } = {
     ...profile,
     resume: '1',
     session: savedSession(sessionKey(profile.room)),
     ...(startAtCamp ? { startAtCamp: '1', spawn: spawnChoice } : {}),
   };
+  // A shared room hears the resume token and identity in its first message, not the URL.
   const ws = solo
-    ? new SoloConnection(connectionProfile)
-    : new WebSocket(multiplayerUrl(multiplayer, location.origin, connectionProfile));
+    ? new SoloConnection({ ...visibleProfile, session, ...(identity ? { identity } : {}) })
+    : new GameSocket(multiplayerUrl(multiplayer, location.origin, visibleProfile), {
+        session,
+        identity,
+        carry: pendingCarry?.progress ?? null,
+      });
   socket = ws;
   ws.addEventListener('open', () => {
     if (ws === socket) startupMarks.mark('socket-open', marks);
@@ -1023,6 +1061,17 @@ async function connect(automatic = false) {
       );
       if (message.resumed && !startAtCamp)
         notify('接続が戻りました。持ち物と進行を復元しました。', 'success');
+      if (pendingCarry && !solo) {
+        notify(
+          message.carried
+            ? `「${pendingCarry.name || 'ソロ'}」の持ち物と探索の記録を連れてきました。`
+            : ws instanceof GameSocket && ws.carryOffered
+              ? 'この部屋にはすでにあなたの人物がいるので、ソロのキャラクターは連れてきませんでした。'
+              : 'この部屋はソロのキャラクターの持ち込みを受け付けていません。',
+          message.carried ? 'success' : 'info',
+        );
+        pendingCarry = null;
+      }
       startAtCamp = false;
     }
     if (message.type === 'intros') {
@@ -1041,10 +1090,11 @@ async function connect(automatic = false) {
       restartAfterRoomReset();
       return;
     }
-    if (message.type === 'state') {
+    if (isWorldFrame(message)) {
       startupMarks.mark('first-state', marks);
       const previous = player();
-      state = { ...state, ...message };
+      state = applyFrame(state, message) as typeof state;
+      if (solo) rememberSolo();
       stateReceivedAt = performance.now();
       if (firstActions) firstEffects();
       if (
@@ -1955,10 +2005,44 @@ function showSetup(error = '') {
     solo,
   );
   closeSetupFlow();
+  bindCarryChoice();
   $('#setup-error').hidden = !error;
   $('#setup-error').textContent = error;
   $('#setup-back').textContent = joined ? '探索に戻る' : '戻る';
   screens.show('setup');
+}
+/** The setup screen's choice of a solo character to bring into a LAN host's room. */
+function bindCarryChoice() {
+  if (!$('#setup-carry')) return;
+  const remembered = rememberedSoloCharacter(() => localStorage);
+  const check = $('#carry-remembered') as HTMLInputElement;
+  const file = $('#carry-file') as HTMLInputElement;
+  const status = (text: string) => setText($('#carry-status'), text);
+  const describe = (card: CharacterCard) =>
+    `「${card.name || 'ソロ'}」の持ち物と探索の記録を連れていきます。`;
+  $('#carry-remembered-choice').hidden = !remembered;
+  if (remembered)
+    $('#carry-remembered-label').textContent =
+      `このブラウザーのソロのキャラクター（${remembered.name || '名前なし'}・${new Date(remembered.savedAt).toLocaleDateString()}）`;
+  check.checked = !!pendingCarry && pendingCarry.savedAt === remembered?.savedAt;
+  status(pendingCarry ? describe(pendingCarry) : '');
+  check.onchange = () => {
+    pendingCarry = check.checked ? remembered : null;
+    file.value = '';
+    status(pendingCarry ? describe(pendingCarry) : '');
+  };
+  file.onchange = async () => {
+    const chosen = file.files?.[0];
+    if (!chosen) return;
+    const card = chosen.size <= 20000 ? parseCharacterCard(await chosen.text()) : null;
+    check.checked = false;
+    pendingCarry = card;
+    status(
+      card
+        ? describe(card)
+        : 'このファイルは読み込めません。ゲームの設定の「キャラクターを書き出す」で作ったファイルを選んでください。',
+    );
+  };
 }
 function closeLoadingCave() {
   loadingCave?.dispose();
@@ -2074,6 +2158,7 @@ async function arriveFromGallery(cave: LoadingCave) {
 let leavingToTitle = false;
 async function leaveToTitle() {
   if (leavingToTitle) return;
+  if (solo) rememberSolo(true);
   motionControls?.stop();
   stopInput();
   manualLeave = true;
@@ -2141,7 +2226,7 @@ function showIdleExit() {
 async function openInvite() {
   if (solo) return;
   openModal(
-    `<span class="modal-illustration">${icon('people')}</span><h2>招待</h2><div class="invite-code"><small>ROOM CODE</small><strong id="invite-code"></strong><span>現在の部屋の接続上限は ${hudPlayerLimit()}人</span></div><label>招待リンク<input id="invite-url" readonly aria-label="招待リンク"></label><button id="copy-invite" class="button button-accent wide">${icon('link')} 招待リンクをコピー</button><p id="invite-note" class="form-note">このPCと同じWi-Fi・LANにいる仲間が参加できます。インターネット越しの参加には、サーバーの公開が必要です。</p><button id="change-room" class="text-button">別の部屋に参加する ${icon('arrow')}</button>`,
+    `<span class="modal-illustration">${icon('people')}</span><h2>招待</h2><div class="invite-code"><small>ROOM CODE</small><strong id="invite-code"></strong><span>現在の部屋の接続上限は ${hudPlayerLimit()}人</span></div><figure id="invite-qr" class="invite-qr" hidden><div id="invite-qr-image"></div><figcaption>スマートフォンのカメラで読み取ると、この部屋に参加できます。</figcaption></figure><label>招待リンク<input id="invite-url" readonly aria-label="招待リンク"></label><button id="copy-invite" class="button button-accent wide">${icon('link')} 招待リンクをコピー</button><p id="invite-note" class="form-note">このPCと同じWi-Fi・LANにいる仲間が参加できます。インターネット越しの参加には、サーバーの公開が必要です。</p><button id="change-room" class="text-button">別の部屋に参加する ${icon('arrow')}</button>`,
   );
   $('#invite-code').textContent = profile.room;
   let base = location.origin;
@@ -2160,6 +2245,17 @@ async function openInvite() {
     $('#invite-note').textContent =
       '展示LAN：相手のPCでも展示フォルダーの start-exhibition-client.bat を起動し、同じ部屋に参加してください。ゲーム本体は各PCのlocalhostから読み込みます。';
   $('#invite-url').value = `${base}/?room=${encodeURIComponent(profile.room)}`;
+  // Other devices cannot open this PC's own name; the QR code shows only a network address.
+  const reachable = !['localhost', '127.0.0.1', '[::1]'].includes(new URL(base).hostname);
+  const qr =
+    reachable && multiplayer.mode !== 'lan'
+      ? qrSvg($('#invite-url').value, '招待リンクのQRコード')
+      : '';
+  $('#invite-qr').hidden = !qr;
+  $('#invite-qr-image').innerHTML = qr;
+  if (!reachable && multiplayer.lan)
+    $('#invite-note').textContent =
+      'このPCのネットワークのアドレスが見つかりません。Wi-FiかLANにつないでから、もう一度開いてください。';
   $('#copy-invite').onclick = async () => {
     const input = $('#invite-url');
     try {
@@ -2541,6 +2637,12 @@ function updateSaveStatus() {
  * Warp; the normal layout opens on the bag with the first food card focused.
  */
 const PAUSE_TAB_ROW = '(max-width: 860px)'; // The breakpoint of the tab row in the CSS.
+/** A file of this character's progress, to bring into a LAN host's room (src/net/character-card.ts). */
+function characterExportMarkup() {
+  return fixedIdentity
+    ? ''
+    : '<div class="settings-item"><div><strong>キャラクターを書き出す</strong><p>持ち物と探索の記録をファイルに保存します。仲間のPCで開いたLANの部屋に連れていけます。</p></div><button type="button" class="button button-outline" data-setting="export-character">書き出す</button></div>';
+}
 function localResetMarkup() {
   return localRoomReset
     ? '<div class="settings-item local-reset-setting"><div><strong>部屋の進行をリセット</strong><p>この部屋を最初からやり直します。</p></div><button type="button" class="button button-outline" data-setting="reset-room">リセット</button></div>'
@@ -2676,7 +2778,7 @@ function openPauseMenu(tab?: string) {
       inventoryMarkup(),
     )}${panel('character', characterSwitchMarkup(fixedIdentity ? null : (normalizeDye(player()?.dye) ?? profile.dye)))}${panel('warp', exhibitionWarpMarkup())}${panel('mascots', mascotMenuMarkup(availableMascots, solo))}${panel(
       'settings',
-      `<h2>設定</h2><div class="settings-list">${audioSettingsMarkup(renderer.audio.settings)}<div class="settings-item"><div><strong>全画面表示</strong></div><button class="button button-outline" data-setting="fullscreen">${icon('expand')} 切り替え</button></div><div class="settings-item"><div><strong>視点</strong></div><div class="settings-buttons"><button class="button button-outline" data-setting="zoom-out">− 遠く</button><button class="button button-outline" data-setting="zoom-in">+ 近く</button><button class="button button-outline" data-setting="camera">${icon('target')} 視点を戻す</button></div></div><div class="settings-item"><div><strong>コントローラー</strong><p class="gamepad-connection" role="status">${usingGamepad ? '' : '未接続'}</p></div></div></div><p id="local-save-status" class="form-note" role="status" hidden></p>${localResetMarkup()}<div class="settings-row">${menuButton(titleExit)}</div>`,
+      `<h2>設定</h2><div class="settings-list">${audioSettingsMarkup(renderer.audio.settings)}<div class="settings-item"><div><strong>全画面表示</strong></div><button class="button button-outline" data-setting="fullscreen">${icon('expand')} 切り替え</button></div><div class="settings-item"><div><strong>視点</strong></div><div class="settings-buttons"><button class="button button-outline" data-setting="zoom-out">− 遠く</button><button class="button button-outline" data-setting="zoom-in">+ 近く</button><button class="button button-outline" data-setting="camera">${icon('target')} 視点を戻す</button></div></div><div class="settings-item"><div><strong>コントローラー</strong><p class="gamepad-connection" role="status">${usingGamepad ? '' : '未接続'}</p></div></div></div><p id="local-save-status" class="form-note" role="status" hidden></p>${characterExportMarkup()}${localResetMarkup()}<div class="settings-row">${menuButton(titleExit)}</div>`,
     )}${panel('share', `<h2>シェア</h2>${sharePanelMarkup()}`)}</div></div>`,
   );
   const root = $('#modal-body') as HTMLElement;
@@ -2821,6 +2923,17 @@ function openPauseMenu(tab?: string) {
       if (!assistedControls()) renderer.adjustZoom(0.15);
     };
     if ($('[data-setting="reset-room"]')) $('[data-setting="reset-room"]').onclick = openRoomReset;
+    if ($('[data-setting="export-character"]'))
+      $('[data-setting="export-character"]').onclick = () => {
+        const card = characterCard(player());
+        if (!card) return;
+        if (solo) rememberSolo(true);
+        downloadCharacterCard(card);
+        notify(
+          'キャラクターを書き出しました。LANの部屋の参加画面で選ぶと連れていけます。',
+          'success',
+        );
+      };
   }
   // The exhibition menu opens on its first tab; the bag shortcut still focuses a usable item.
   if (pauseTab === 'warp')
@@ -2912,6 +3025,8 @@ async function toggleFullscreen() {
     notify('この画面では全画面表示を利用できません。');
   }
 }
+// The shell's own listener ends when the game takes the title; the label stays.
+bindTitlePlayModes($('#screen-title'), multiplayer);
 $('#title-start').onclick = () => showSetup();
 $('#title-contributors').addEventListener('click', () => {
   openModal(contributorsDialogMarkup(undefined, { links: onlineTitle }));
@@ -3603,7 +3718,8 @@ function resumeTitle(handoff: TitleHandoff | null) {
     return;
   }
   showTitle();
-  if (handoff?.intent === 'start') showSetup();
+  // A title switched from the other kind of play opens its setup directly.
+  if (handoff?.intent === 'start' || takeSetupRequest()) showSetup();
 }
 startupMarks.page('game-module-ready');
 if (query.get('autostart') === '1') {

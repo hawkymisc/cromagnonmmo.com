@@ -2,6 +2,7 @@
 
 - [ゲームの仕様](game-spec.md)
 - [遊び方](game-guide.md)
+- [家やLANでみんなで遊ぶ](lan-play.md)
 - [リリースノート](releases.md)
 - [開発環境](DEVELOPMENT.md)
 - [アーキテクチャ](ARCHITECTURE.md)

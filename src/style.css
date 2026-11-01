@@ -2713,6 +2713,63 @@ dialog:has(.character-switch) {
   font-size: 9px;
   color: #96a586;
 }
+/* The invitation link as a QR code: dark on white with its quiet zone, as cameras need. */
+.invite-qr {
+  margin: 0 0 22px;
+  text-align: center;
+}
+.invite-qr[hidden] {
+  display: none;
+}
+.invite-qr > div {
+  width: min(220px, 60vw);
+  margin: 0 auto 8px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #fff;
+}
+.invite-qr svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.invite-qr figcaption {
+  font-size: 11px;
+  color: var(--muted);
+}
+/* The setup screen's choice of a solo character to bring into a LAN room. */
+.setup-carry {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px dashed var(--line);
+  border-radius: 9px;
+  display: grid;
+  gap: 8px;
+}
+.setup-carry legend {
+  padding: 0 6px;
+  color: var(--cream);
+  font-weight: 600;
+}
+.setup-carry .form-note {
+  margin: 0;
+}
+.setup-carry-choice[hidden] {
+  display: none;
+}
+.setup-carry-choice,
+.setup-carry-file {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  color: var(--cream);
+  font-size: 13px;
+}
+.setup-carry-file input {
+  max-width: 100%;
+  color: var(--muted);
+}
 .inventory-header {
   position: sticky;
   top: -1px;

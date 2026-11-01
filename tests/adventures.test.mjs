@@ -11,6 +11,7 @@ import { createEnemies } from '../dist/shared/enemies.mjs';
 import { SCENERY } from '../dist/shared/scenery-layout.mjs';
 import { AdventureMaterials } from '../dist/src/adventure-materials.js';
 import * as THREE from 'three';
+import { legacySave } from './helpers/save-format.mjs';
 
 const collision=new CollisionWorld();
 const makePlayer=(id='p')=>({id,x:48,z:57,radius:.32,species:'cro',energy:100,inventory:{wood:0,stone:0,berry:0,rawMeat:0,cookedMeat:0},path:[],facing:0,adventure:{regions:{}}});
@@ -119,7 +120,7 @@ test('saved worlds and same-session reconnect retain exploration and append new 
   const reconnect=new Socket();core.connect(reconnect,new URLSearchParams({room:'SAVE',resume:'1',session:token}));assert.equal(travelSeals([...room.players.values()][0]),1);
   const restored=createGameCore();restored.importState(saved);const s=new Socket();restored.connect(s,new URLSearchParams({room:'SAVE',resume:'1',session:token}));
   const after=[...restored.rooms.get('SAVE').players.values()][0];assert.deepEqual(after.adventure,p.adventure);assert.equal(after.inventory.wood,8);
-  const older=structuredClone(saved);for(const r of older.rooms){r.resources=r.resources.filter(x=>!x.regionId);r.enemies=r.enemies.filter(x=>!x.regionId);for(const entry of r.sessions)delete entry.player.adventure;}
+  const older=legacySave(saved);for(const r of older.rooms){r.resources=r.resources.filter(x=>!x.regionId);r.enemies=r.enemies.filter(x=>!x.regionId);for(const entry of r.sessions)delete entry.player.adventure;}
   const migrated=createGameCore();migrated.importState(older);assert.equal(migrated.rooms.get('SAVE').resources.filter(x=>x.regionId).length,18);assert.equal(migrated.rooms.get('SAVE').enemies.filter(x=>x.regionId).length,4);
   core.close();restored.close();migrated.close();
 });

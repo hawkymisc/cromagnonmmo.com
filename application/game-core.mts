@@ -12,7 +12,14 @@ import {
 import { BOT_KINDS } from '../shared/orb-bots.mjs';
 import { caveInteriorWeight } from '../shared/cave-light.mjs';
 import { updateFishing, cancelFishing } from '../shared/fishing.mjs';
-import { DEFAULT_RULES, EXHIBITION_RULES, clientRules, roomRules } from '../shared/room-rules.mjs';
+import {
+  DEFAULT_RULES,
+  EXHIBITION_RULES,
+  clientRules,
+  roomPlayerLimit,
+  roomRules,
+  type RoomRules,
+} from '../shared/room-rules.mjs';
 import { createHouseholds, householdSnapshots } from '../shared/household-life.mjs';
 import {
   createResidents,
@@ -75,11 +82,26 @@ import { SCENERY } from '../shared/scenery-layout.mjs';
 import { CAMP, INITIAL_RESOURCES, WORLD } from '../shared/world.mjs';
 import { createActionHandler } from './actions.mjs';
 import { defaultRuntime, type GameConnection, type Runtime } from './ports.mjs';
-import { decodeCommand } from './protocol.mjs';
+import {
+  MAX_COMMAND_BYTES,
+  MAX_HELLO_BYTES,
+  PROTOCOL_VERSION,
+  decodeCommand,
+} from './protocol.mjs';
+import { identityFromPublicKey } from './identity.mjs';
+import { MAX_CARRIED_BYTES, carriedProfile } from './carried-profile.mjs';
+import {
+  SAVE_VERSION,
+  collapseSavedRooms,
+  expandSavedRooms,
+  saveVersionReadable,
+} from './save-format.mjs';
 import { activeMapPins, MAP_PIN_COOLDOWN_MS, MAP_PIN_LIFETIME_MS } from '../shared/map-pins.mjs';
 import { locationName } from '../shared/paleo-geography.mjs';
 import { snapshot as createSnapshot } from './snapshot.mjs';
-import { IDLE_TIMEOUT_MS, IDLE_CLOSE_CODE, IDLE_MESSAGE } from '../shared/player-inactivity.mjs';
+import { IDLE_CLOSE_CODE, idleMessage } from '../shared/player-inactivity.mjs';
+/** A connection opened for the version 2 handshake must say hello within this time. */
+export const HELLO_TIMEOUT_MS = 10000;
 const COLORS = ['#e4ac65', '#87b899', '#b49cd2', '#76a7c3', '#ce8c8b'];
 const cleanText = (value, max) =>
   typeof value === 'string'
@@ -106,6 +128,7 @@ export function createGameCore({
   visibility: requestedVisibility = ALL_CONTENT,
   mascotModels = ACTIVE_MASCOT_MODELS,
   multiMascots = false,
+  rules: requestedRules = {},
 }: {
   resumeGraceMs?: number;
   keepEmptyRooms?: boolean;
@@ -118,10 +141,17 @@ export function createGameCore({
   visibility?: ContentVisibility;
   mascotModels?: readonly string[];
   multiMascots?: boolean;
+  /** Tuning for every room this core creates (shared/room-rules.mts). Exhibition wins. */
+  rules?: Partial<RoomRules>;
 } = {}) {
   if (!Number.isInteger(playerLimit) || playerLimit < 1 || playerLimit > 64)
     throw new Error('playerLimit must be an integer from 1 to 64');
   const rooms = new Map();
+  const baseRules: RoomRules = exhibition
+    ? EXHIBITION_RULES
+    : Object.freeze({ ...DEFAULT_RULES, ...requestedRules });
+  /** Connections that opened for the handshake and have not said hello yet. */
+  const awaitingHello = new Set<{ socket: GameConnection; deadline: number }>();
   const visibility = Object.freeze({
     hiddenCharacters: Object.freeze([...requestedVisibility.hiddenCharacters]),
     hideMae: requestedVisibility.hideMae,
@@ -213,7 +243,7 @@ export function createGameCore({
   const act = createActionHandler({
     notice,
     broadcast,
-    snapshot,
+    markDirty,
     systemChat,
     runtime,
     visibility,
@@ -226,7 +256,7 @@ export function createGameCore({
       room = {
         name: roomName,
         playerLimit,
-        rules: exhibition ? EXHIBITION_RULES : DEFAULT_RULES,
+        rules: baseRules,
         createdAt: runtime.now(),
         players: new Map(),
         sessions: new Map(),
@@ -264,9 +294,51 @@ export function createGameCore({
       room.orbBots = [];
       room.enemies = createEnemies(room.collision, room.animals);
       createResidents(room, [], runtime.now());
+      room.playerLimit = roomPlayerLimit(room, playerLimit);
+      room.stateDirty = false;
+      room.worldDirty = false;
       rooms.set(roomName, room);
     }
     return room;
+  }
+
+  /**
+   * Everything that changes what players see says so here; the state frame itself is
+   * assembled and sent only by flushState, once per handled message and once per tick.
+   * `world` adds the slow-changing world (resources, gulf, fires) to the next frame.
+   */
+  function markDirty(room, world = false) {
+    room.stateDirty = true;
+    if (world) room.worldDirty = true;
+  }
+
+  function flushState(room) {
+    if (!room.stateDirty || rooms.get(room.name) !== room) return;
+    const world = room.worldDirty;
+    room.stateDirty = false;
+    room.worldDirty = false;
+    broadcast(room, snapshot(room, world));
+  }
+
+  /** Who is this person anywhere on this host: connected, or waiting to come back. */
+  function findIdentity(identity: string) {
+    for (const room of rooms.values()) {
+      for (const player of room.players.values())
+        if (player.identity === identity) return { room, player, token: null };
+      for (const [token, entry] of room.sessions)
+        if (entry.player.identity === identity) return { room, player: entry.player, token };
+    }
+    return null;
+  }
+
+  /**
+   * One listener per socket event, routed to the stage the connection is in: some host
+   * sockets (cloudflare/socket-adapter.mts) keep a single handler per event.
+   */
+  interface Link {
+    message: ((data: { toString(): string }, isBinary: boolean) => void) | null;
+    close: (() => void) | null;
+    pong: (() => void) | null;
   }
 
   function connect(socket: GameConnection, params: URLSearchParams) {
@@ -274,6 +346,50 @@ export function createGameCore({
       socket.close(1012, 'Server restarting');
       return;
     }
+    const link: Link = { message: null, close: null, pong: null };
+    socket.on('message', (data, isBinary) => link.message?.(data, isBinary));
+    socket.on('close', () => link.close?.());
+    socket.on('pong', () => link.pong?.());
+    socket.on('error', () => {});
+    if (params.get('hello') !== '1') {
+      join(socket, params, link, null);
+      return;
+    }
+    // Protocol 2: the resume token and public key arrive in the first message, not the URL.
+    const pending = { socket, deadline: runtime.now() + HELLO_TIMEOUT_MS };
+    awaitingHello.add(pending);
+    link.close = () => awaitingHello.delete(pending);
+    link.message = (data, isBinary) => {
+      if (closing || isBinary || !awaitingHello.has(pending)) return;
+      const text = data.toString();
+      const message = text.length <= MAX_HELLO_BYTES ? decodeCommand(text) : null;
+      if (message?.type !== 'hello') return;
+      awaitingHello.delete(pending);
+      link.message = link.close = null;
+      if (message.protocolVersion !== PROTOCOL_VERSION) {
+        send(socket, {
+          type: 'error',
+          code: 'PROTOCOL_MISMATCH',
+          text: 'ゲームの版がサーバーと違います。ページを再読み込みしてください。',
+        });
+        socket.close(4011, 'Protocol mismatch');
+        return;
+      }
+      const joined = new URLSearchParams(params);
+      joined.delete('session');
+      joined.delete('identity');
+      if (message.session) joined.set('session', message.session);
+      if (message.identity) joined.set('identity', message.identity);
+      join(socket, joined, link, message.carry ?? null);
+    };
+    send(socket, {
+      type: 'handshake',
+      protocolVersion: PROTOCOL_VERSION,
+      acceptsCarry: baseRules.acceptCarriedProfiles,
+    });
+  }
+
+  function join(socket: GameConnection, params: URLSearchParams, link: Link, carry: unknown) {
     const roomName =
       cleanText(params.get('room'), 20)
         .toUpperCase()
@@ -287,23 +403,53 @@ export function createGameCore({
       token = params.get('session'),
       resumable = params.get('resume') === '1';
     for (const [key, entry] of room.sessions) if (now >= entry.expiresAt) room.sessions.delete(key);
-    const active =
+    const identity = identityFromPublicKey(params.get('identity'));
+    let active =
       resumable && token ? [...room.players.values()].find((p) => p.sessionToken === token) : null;
-    const saved = resumable && token ? room.sessions.get(token) : null;
-    if (room.players.size >= playerLimit && !active) {
+    let saved = resumable && token ? room.sessions.get(token) : null;
+    let savedFrom = saved ? { room, token } : null;
+    // A person is one body on this host: without this room's token, their browser's
+    // identity finds them in whichever room they were last, and they bring it all here.
+    const known = identity ? findIdentity(identity) : null;
+    if (resumable && !active && !saved && known) {
+      if (known.token === null && known.room !== room) {
+        send(socket, {
+          type: 'error',
+          code: 'ACTIVE_ELSEWHERE',
+          text: `この人物は別の部屋（${known.room.name}）で遊んでいます。そちらを閉じてから参加してください。`,
+        });
+        socket.close(4005, 'Active elsewhere');
+        return;
+      }
+      if (known.token === null) active = known.player;
+      else {
+        saved = known.room.sessions.get(known.token);
+        savedFrom = { room: known.room, token: known.token };
+      }
+    }
+    if (room.players.size >= room.playerLimit && !active) {
       send(socket, {
         type: 'error',
         code: 'ROOM_FULL',
-        text: `この部屋は現在の上限${playerLimit}人に達しました。別の部屋の名前で参加してください。`,
+        text: `この部屋は現在の上限${room.playerLimit}人に達しました。別の部屋の名前で参加してください。`,
       });
       socket.close(4001, 'Room full');
       return;
     }
+    // A newcomer's own solo character, where this room welcomes one (a home LAN).
+    const carried =
+      !active && !saved && carry && roomRules(room).acceptCarriedProfiles
+        ? JSON.stringify(carry).length <= MAX_CARRIED_BYTES
+          ? carriedProfile(carry)
+          : null
+        : null;
     const usedColors = new Set([...room.players.values()].map((player) => player.color));
     const resumed = !!(active || saved);
     const player = active ||
       saved?.player || {
-        id: runtime.id(),
+        // A new person is named by their browser's key where it sent one.
+        id: identity && !known ? identity : runtime.id(),
+        ...(identity && !known ? { identity } : {}),
         name: cleanText(params.get('name'), 16) || '旅人',
         ...normalizeCharacter({
           species: params.get('species'),
@@ -417,7 +563,18 @@ export function createGameCore({
       });
       oldSocket.close(4004, 'Session replaced');
     }
-    if (saved) room.sessions.delete(token);
+    if (saved) savedFrom.room.sessions.delete(savedFrom.token);
+    // Someone known by token alone (an older save) is bound to this browser from now on.
+    if (identity && !player.identity && !known) player.identity = identity;
+    if (carried) {
+      Object.assign(player, carried, {
+        inventory: { ...player.inventory, ...carried.inventory },
+      });
+      ensureAdventure(player);
+      ensureGulfPlayer(player);
+      player.inventory.boat = carriedBoats(player);
+      ensureVillageProgress(player);
+    }
     // Commit a chosen or substituted look only after an arrival point succeeds.
     applyAppearance(player, appearance);
     if (chooseAppearance) {
@@ -465,9 +622,11 @@ export function createGameCore({
       combatVersion: 3,
       characterVersion: 2,
       worldVersion: WORLD.version,
+      protocolVersion: PROTOCOL_VERSION,
       id: player.id,
       room: roomName,
       resumed,
+      carried: !!carried,
       session: player.sessionToken,
       rules: clientRules(room),
       mascots: room.mascotKeys,
@@ -482,14 +641,14 @@ export function createGameCore({
         ...(multiMascots ? { mascots: selectedMascotKeys(player) } : {}),
       },
     });
-    broadcast(room, snapshot(room, true));
+    markDirty(room, true);
+    flushState(room);
     broadcastIntros(room);
     systemChat(room, `${player.name} が谷に${resumed ? '戻ってきた' : 'やってきた'}。`);
-    socket.on('pong', () => {
+    link.pong = () => {
       if (player.socket === socket) player.alive = true;
-    });
-    socket.on('error', () => {});
-    socket.on('message', (data, isBinary) => {
+    };
+    link.message = (data, isBinary) => {
       if (
         closing ||
         isBinary ||
@@ -498,13 +657,20 @@ export function createGameCore({
         rooms.get(roomName) !== room
       )
         return;
+      handleCommand(data.toString());
+      // Whatever the command changed reaches everyone in one frame, after its replies.
+      flushState(room);
+    };
+    function handleCommand(text: string) {
+      if (text.length > MAX_COMMAND_BYTES) return;
       const now = runtime.now();
       player.tokens = Math.min(70, player.tokens + (now - player.refillAt) * 0.035);
       player.refillAt = now;
       if (player.tokens < 1) return;
       player.tokens -= 1;
-      const message = decodeCommand(data.toString());
-      if (!message) return;
+      const message = decodeCommand(text);
+      // The handshake is over; a later hello is not a command.
+      if (!message || message.type === 'hello') return;
       // Heartbeats and automatic stop/cancel frames do not prove someone is playing.
       if (
         message.type !== 'ping' &&
@@ -546,7 +712,7 @@ export function createGameCore({
             mapPin: true,
           });
         }
-        broadcast(room, snapshot(room));
+        markDirty(room);
         return;
       }
       if (message.type === 'leave') {
@@ -563,7 +729,7 @@ export function createGameCore({
         if (message.kind !== 'cancel') player.lastAction = now;
         const result = handleBarterCommand(room, player, message, now, runtime.id);
         if (result.text) notice(player, result.text, result.ok ? 'success' : 'info');
-        if (result.changed) broadcast(room, snapshot(room));
+        if (result.changed) markDirty(room);
         return;
       }
       if (player.carrierId && ['move', 'gait'].includes(message.type)) return;
@@ -687,9 +853,11 @@ export function createGameCore({
           at: typeof message.at === 'string' ? message.at.slice(0, 40) : message.at,
         });
       }
-    });
-    socket.on('close', () => {
-      if (player.socket !== socket || rooms.get(roomName) !== room) return;
+    }
+    link.close = () => {
+      // While the host stops, a dropped connection keeps its place: the final save still
+      // exports connected players with their resume tokens, so they return where they were.
+      if (closing || player.socket !== socket || rooms.get(roomName) !== room) return;
       cancelBarter(room, player.id, runtime.now(), '相手が接続を離れたので、交換を中止しました。');
       clearCarryOffer(room, player);
       releaseCarry(room, player, true);
@@ -722,9 +890,10 @@ export function createGameCore({
       if (!keepEmptyRooms && room.players.size === 0 && !room.sessions.size) rooms.delete(roomName);
       else {
         systemChat(room, `${player.name} が谷をあとにした。`);
-        broadcast(room, snapshot(room, true));
+        markDirty(room, true);
+        flushState(room);
       }
-    });
+    };
   }
 
   let previousTick = runtime.now();
@@ -736,6 +905,16 @@ export function createGameCore({
     previousTick = now;
     const heartbeat = now - lastHeartbeat > 15000;
     if (heartbeat) lastHeartbeat = now;
+    for (const pending of awaitingHello)
+      if (now >= pending.deadline) {
+        awaitingHello.delete(pending);
+        send(pending.socket, {
+          type: 'error',
+          code: 'HELLO_TIMEOUT',
+          text: '接続の準備が終わりませんでした。もう一度参加してください。',
+        });
+        pending.socket.close(4010, 'Handshake timeout');
+      }
     for (const room of rooms.values()) {
       if (resettingRooms.has(room.name)) continue;
       for (const [token, entry] of room.sessions)
@@ -753,8 +932,17 @@ export function createGameCore({
       }
       for (const player of room.players.values()) {
         if (player.socket.readyState !== 1) continue;
-        if (disconnectIdlePlayers && now - player.lastActivityAt >= IDLE_TIMEOUT_MS) {
-          send(player.socket, { type: 'error', code: 'IDLE_TIMEOUT', text: IDLE_MESSAGE });
+        const idleLimit = roomRules(room).idleTimeoutMs;
+        if (
+          disconnectIdlePlayers &&
+          idleLimit !== null &&
+          now - player.lastActivityAt >= idleLimit
+        ) {
+          send(player.socket, {
+            type: 'error',
+            code: 'IDLE_TIMEOUT',
+            text: idleMessage(idleLimit),
+          });
           // Use the ordinary disconnect path so possessions and resume tokens survive.
           player.socket.close(IDLE_CLOSE_CODE, 'Idle timeout');
           continue;
@@ -834,7 +1022,6 @@ export function createGameCore({
         }
       }
       if (
-        now - room.lastBroadcast >= 90 ||
         resourcesChanged ||
         gulfChanged ||
         huntingChanged ||
@@ -842,11 +1029,11 @@ export function createGameCore({
         fishingChanged ||
         barterChanged ||
         coastalChanged
-      ) {
-        broadcast(
-          room,
-          snapshot(room, resourcesChanged || gulfChanged || fishingChanged || coastalChanged),
-        );
+      )
+        markDirty(room, resourcesChanged || gulfChanged || fishingChanged || coastalChanged);
+      else if (now - room.lastBroadcast >= 90) markDirty(room);
+      if (room.stateDirty) {
+        flushState(room);
         room.lastBroadcast = now;
       }
     }
@@ -874,71 +1061,75 @@ export function createGameCore({
 
   function exportState() {
     const now = runtime.now();
+    const expanded = [...rooms.values()].map((room) => {
+      const sessions = [...room.sessions.entries()]
+        .filter(([, entry]) => entry.expiresAt > now)
+        .map(([token, entry]) => ({ token, expiresAt: entry.expiresAt, player: entry.player }));
+      for (const player of room.players.values())
+        if (player.sessionToken) {
+          sessions.push({ token: player.sessionToken, expiresAt: sessionExpiry(now), player });
+        }
+      return JSON.parse(
+        JSON.stringify(
+          {
+            name: room.name,
+            createdAt: room.createdAt,
+            camp: room.camp,
+            resources: room.resources,
+            animals: room.animals,
+            // Companions are not world bodies to save: each player's choice is in
+            // their session, and the companion arrives beside them on return.
+            enemies: room.enemies,
+            boats: room.boats,
+            gulf: room.gulf,
+            residents: residentSnapshots(room),
+            households: householdSnapshots(room),
+            sessions: persistentSessions ? sessions : sessions.slice(-100),
+          },
+          (key, value) =>
+            [
+              'socket',
+              'lastActivityAt',
+              'lastMapPinAt',
+              'lastIntroAt',
+              'lastDyeAt',
+              'jumpAt',
+              'jumpSequence',
+              'carrierId',
+              'passengerId',
+              'carryOfferFromId',
+              'carryOfferToId',
+              'carryOfferUntil',
+              'carrySafePoint',
+              'carryHurtSequence',
+              'knockbackAt',
+              'knockbackSequence',
+              'knockbackX',
+              'knockbackZ',
+              'knockbackDistance',
+              'knockbackDone',
+              'knockbackWarp',
+            ].includes(key)
+              ? undefined
+              : value,
+        ),
+      );
+    });
+    // Each person's progress is kept once, beside the rooms; a room keeps its members.
+    const { rooms: savedRooms, players } = collapseSavedRooms(expanded);
     return {
-      version: 1,
+      version: SAVE_VERSION,
       worldVersion: WORLD.version,
       savedAt: now,
-      rooms: [...rooms.values()].map((room) => {
-        const sessions = [...room.sessions.entries()]
-          .filter(([, entry]) => entry.expiresAt > now)
-          .map(([token, entry]) => ({ token, expiresAt: entry.expiresAt, player: entry.player }));
-        for (const player of room.players.values())
-          if (player.sessionToken) {
-            sessions.push({ token: player.sessionToken, expiresAt: sessionExpiry(now), player });
-          }
-        return JSON.parse(
-          JSON.stringify(
-            {
-              name: room.name,
-              createdAt: room.createdAt,
-              camp: room.camp,
-              resources: room.resources,
-              animals: room.animals,
-              // Companions are not world bodies to save: each player's choice is in
-              // their session, and the companion arrives beside them on return.
-              enemies: room.enemies,
-              boats: room.boats,
-              gulf: room.gulf,
-              residents: residentSnapshots(room),
-              households: householdSnapshots(room),
-              sessions: persistentSessions ? sessions : sessions.slice(-100),
-            },
-            (key, value) =>
-              [
-                'socket',
-                'lastActivityAt',
-                'lastMapPinAt',
-                'lastIntroAt',
-                'lastDyeAt',
-                'jumpAt',
-                'jumpSequence',
-                'carrierId',
-                'passengerId',
-                'carryOfferFromId',
-                'carryOfferToId',
-                'carryOfferUntil',
-                'carrySafePoint',
-                'carryHurtSequence',
-                'knockbackAt',
-                'knockbackSequence',
-                'knockbackX',
-                'knockbackZ',
-                'knockbackDistance',
-                'knockbackDone',
-                'knockbackWarp',
-              ].includes(key)
-                ? undefined
-                : value,
-          ),
-        );
-      }),
+      players,
+      rooms: savedRooms,
     };
   }
 
   function importState(saved) {
     if (
       !saved ||
-      saved.version !== 1 ||
+      !saveVersionReadable(saved.version) ||
       ![2, 3, WORLD.version].includes(saved.worldVersion) ||
       !Array.isArray(saved.rooms)
     ) {
@@ -949,7 +1140,7 @@ export function createGameCore({
     if (rooms.size) throw new Error('Restore requires an empty game');
     // Restoring must not attach sockets or live mutations to the caller's saved
     // checkpoint; it may also be retained for verification or another restore.
-    for (const record of JSON.parse(JSON.stringify(saved.rooms))) {
+    for (const record of expandSavedRooms(saved)) {
       if (record.gulf?.version > GULF.version) throw new Error('Unsupported saved gulf version');
       const movedGulfPlayers = migrateGulfRecord(record);
       for (const player of retireGulfRecord(record)) movedGulfPlayers.add(player);

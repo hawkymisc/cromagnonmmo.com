@@ -7,6 +7,7 @@ import { CollisionWorld } from '../dist/shared/collision.mjs';
 import { GamepadInput, PAD } from '../dist/src/gamepad-input.js';
 import { LocalPrediction } from '../dist/src/local-prediction.js';
 import { canStartAttack } from '../dist/src/combat-input.js';
+import { savedSessions } from './helpers/save-format.mjs';
 
 class Socket {
   readyState = 1;
@@ -233,7 +234,7 @@ test('reconnect and export/import restore on the ground without mutating live ju
   const f = fixture();
   f.jump();
   const save = f.core.exportState();
-  assert.equal(save.rooms[0].sessions[0].player.jumpAt, undefined);
+  assert.equal(savedSessions(save)[0].player.jumpAt, undefined);
   assert.equal(f.player.jumpSequence, 1);
   const restored = createGameCore({ runtime: f.runtime });
   restored.importState(save);
