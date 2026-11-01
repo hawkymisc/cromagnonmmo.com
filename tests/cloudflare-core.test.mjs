@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGameCore } from '../dist/application/game-core.mjs';
 import { freshBudget, reserve, nextDay } from '../dist/cloudflare/free-budget.mjs';
+import { savedSessions } from './helpers/save-format.mjs';
 class Socket {
   readyState = 1;
   bufferedAmount = 0;
@@ -39,7 +40,7 @@ test('cloud save restores private sessions, inventory and world after a fresh pr
   room.animals[0].health = 0;
   room.animals[0].meatRemaining = 2;
   const saved = JSON.parse(JSON.stringify(core.exportState()));
-  assert.equal(saved.rooms[0].sessions[0].player.socket, undefined);
+  assert.equal(savedSessions(saved)[0].player.socket, undefined);
   const restored = createGameCore({ resumeGraceMs: 86400000, keepEmptyRooms: true });
   restored.importState(saved);
   const fresh = new Socket();

@@ -1,7 +1,7 @@
 import { icon } from './icons.js';
 import { contributorsDialogMarkup } from './title-credits.js';
 import { BUILD_PROFILE } from './build-profile.js';
-import type { MultiplayerConfig } from './multiplayer-config.js';
+import { offersSharedPlay, SOLO_QUERY, type MultiplayerConfig } from './multiplayer-config.js';
 import { ScreenManager } from './screens.js';
 import { bindLanguageToggle, installLanguageUI } from './language-ui.js';
 import { bindShareLinks, shareLinksMarkup } from './share-links.js';
@@ -46,6 +46,78 @@ export function modalMarkup(): string {
 /** The game's rule (main.ts onlineTitle): exhibition and LAN titles never link out. */
 export function titleLinks(config: Pick<MultiplayerConfig, 'mode'>): boolean {
   return config.mode !== 'lan' && BUILD_PROFILE.environment !== 'exhibition';
+}
+
+/** The query that opens the setup screen once the title is ready (a title mode switch). */
+export const SETUP_QUERY = 'setup';
+
+export interface TitlePlayModes {
+  /** The first button's label: this page's kind of play. */
+  start: string;
+  /** The second button: the other kind of play, on another page of the same host. */
+  other: { label: string; href: string | null; note?: string };
+}
+
+/**
+ * On a host that offers both (a LAN host, `pnpm run start:lan`), the title's second button
+ * opens the other kind of play. Solo play keeps its save with Web Locks and WebCrypto, which
+ * a browser grants only to https and to the PC itself, so a phone on a plain-http LAN page
+ * is offered only the shared room.
+ */
+export function titlePlayModes(
+  config: MultiplayerConfig,
+  search: string,
+  secure: boolean,
+): TitlePlayModes | null {
+  if (!offersSharedPlay(config) || BUILD_PROFILE.environment === 'exhibition') return null;
+  const link = (solo: boolean) => {
+    const params = new URLSearchParams(search);
+    if (solo) params.set(SOLO_QUERY, 'solo');
+    else params.delete(SOLO_QUERY);
+    params.set(SETUP_QUERY, '1');
+    return `/?${params}`;
+  };
+  if (config.mode === 'solo')
+    return { start: 'ソロプレイで始める', other: { label: 'みんなで遊ぶ', href: link(false) } };
+  return {
+    start: 'みんなで遊ぶ',
+    other: secure
+      ? { label: 'ひとりで遊ぶ', href: link(true) }
+      : { label: 'ひとりで遊ぶ', href: null, note: 'このアドレスでは使えません' },
+  };
+}
+
+/** Label the title's buttons for this host and make the second one open the other play. */
+export function bindTitlePlayModes(
+  title: HTMLElement,
+  config: MultiplayerConfig,
+  signal?: AbortSignal,
+) {
+  const modes = titlePlayModes(config, location.search, globalThis.isSecureContext === true);
+  const start = title.querySelector<HTMLButtonElement>('#title-start');
+  const other = title.querySelector<HTMLButtonElement>('#title-online');
+  if (!modes || !start || !other) return;
+  start.textContent = modes.start;
+  other.textContent = modes.other.label;
+  if (modes.other.note) {
+    const note = document.createElement('small');
+    note.textContent = modes.other.note;
+    other.append(note);
+  }
+  const href = modes.other.href;
+  other.disabled = !href;
+  other.setAttribute('aria-disabled', String(!href));
+  if (href) other.addEventListener('click', () => location.assign(href), { signal });
+}
+
+/** The title was opened by a mode switch: open the setup screen once, then forget it. */
+export function takeSetupRequest(): boolean {
+  const params = new URLSearchParams(location.search);
+  if (params.get(SETUP_QUERY) !== '1') return false;
+  params.delete(SETUP_QUERY);
+  const query = params.toString();
+  history.replaceState(history.state, '', `${location.pathname}${query ? `?${query}` : ''}`);
+  return true;
 }
 
 /** A title action that needs the game module: performed once by main.ts. */
@@ -258,6 +330,8 @@ export function renderTitleShell(
   config.then(
     (value) => {
       if (!titleLinks(value)) title.querySelector('.share-links')?.remove();
+      bindTitlePlayModes(title, value, signal);
+      if (takeSetupRequest()) current.start();
     },
     () => {},
   );

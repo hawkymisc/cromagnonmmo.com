@@ -8,6 +8,10 @@ export interface MultiplayerConfig {
   buildId?: string;
   controllerLayout?: ControllerLayout;
   movementRefreshMs?: number;
+  /** The host really runs the shared game (a LAN host); without it `online` means solo. */
+  allowOnline?: boolean;
+  /** Served by `pnpm run start:lan`: people on the same network share the room. */
+  lan?: boolean;
 }
 
 export function parseMultiplayerConfig(value: unknown): MultiplayerConfig {
@@ -38,6 +42,8 @@ export function parseMultiplayerConfig(value: unknown): MultiplayerConfig {
     guestName: typeof config.guestName === 'string' ? config.guestName : undefined,
     buildId: typeof config.buildId === 'string' ? config.buildId : undefined,
     controllerLayout: parseControllerLayout(config.controllerLayout),
+    ...(config.allowOnline === true ? { allowOnline: true } : {}),
+    ...(config.lan === true ? { lan: true } : {}),
     ...(config.movementRefreshMs === undefined
       ? {}
       : { movementRefreshMs: Number(config.movementRefreshMs) }),
@@ -64,7 +70,30 @@ export function multiplayerSessionKey(config: MultiplayerConfig, room: string) {
       : room;
 }
 
-export async function loadMultiplayerConfig(): Promise<MultiplayerConfig> {
+/** The page's query asks for solo play on a host that also offers the shared room. */
+export const SOLO_QUERY = 'play';
+
+/**
+ * What this page plays. Online play needs the host's explicit `allowOnline` (a LAN host):
+ * the public site's file says `online` without it, and older deployments' cached files
+ * too, so they keep playing solo. `?play=solo` picks solo on a host that offers both.
+ */
+export function effectiveMultiplayerConfig(
+  config: MultiplayerConfig,
+  search = '',
+): MultiplayerConfig {
+  if (config.mode === 'lan') return config;
+  const solo = { ...config, mode: 'solo' as const, serverUrl: '', room: 'SOLO' };
+  if (config.mode !== 'online' || config.allowOnline !== true) return solo;
+  return new URLSearchParams(search).get(SOLO_QUERY) === 'solo' ? solo : config;
+}
+
+/** Both kinds of play are offered here (a LAN host): the title links between them. */
+export const offersSharedPlay = (config: MultiplayerConfig) => config.allowOnline === true;
+
+export async function loadMultiplayerConfig(
+  search = globalThis.location?.search ?? '',
+): Promise<MultiplayerConfig> {
   const response = await fetch('/multiplayer-config.json', {
     cache: 'no-store',
     signal: AbortSignal.timeout(8000),
@@ -72,7 +101,5 @@ export async function loadMultiplayerConfig(): Promise<MultiplayerConfig> {
   // Old online deployments do not yet have a runtime config file.
   if (response.status === 404) return { mode: 'solo', serverUrl: '', room: 'SOLO' };
   if (!response.ok) throw new Error('接続設定を読み込めません。起動ウィンドウを確認してください。');
-  const config = parseMultiplayerConfig(await response.json());
-  // Online entry is currently disabled, including old deployments' cached config.
-  return config.mode === 'lan' ? config : { ...config, mode: 'solo', serverUrl: '', room: 'SOLO' };
+  return effectiveMultiplayerConfig(parseMultiplayerConfig(await response.json()), search);
 }

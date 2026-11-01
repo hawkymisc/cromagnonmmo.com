@@ -26,6 +26,7 @@ import { handleGulfAction } from '../dist/shared/gulf-life.mjs';
 import { handleHuntingAction, updateHunting } from '../dist/shared/hunting.mjs';
 import { handleCoastalAction } from '../dist/shared/coastal-craft.mjs';
 import { ROOT_RECIPES } from '../dist/shared/crops.mjs';
+import { legacySave } from './helpers/save-format.mjs';
 
 class Socket extends EventEmitter {
   readyState = 1;
@@ -123,7 +124,7 @@ for (const version of [1, 2])
     });
     room.resources[0].amount = 1;
     room.camp.wood = 7;
-    const saved = core.exportState(),
+    const saved = legacySave(core.exportState()),
       r = saved.rooms[0];
     r.gulf.version = version;
     const p = r.sessions[0].player,

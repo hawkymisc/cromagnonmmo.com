@@ -7,6 +7,7 @@ import { createGameServer } from '../dist/server.mjs';
 import { readDeliveryOverlay } from '../dist/infrastructure/node/delivery-overlay.mjs';
 import { enterPreparedWorld } from './qa-game-entry.mjs';
 import { publicAssets } from './qa-static-server.mjs';
+import { savedMembers } from '../dist/application/save-format.mjs';
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const output = process.argv[2] || `output/playwright/solo-${Date.now()}`;
 await mkdir(output, { recursive: true });
@@ -119,8 +120,8 @@ async function checkInactivity(target, background = false) {
   );
   assert.equal(await target.locator('#world').isVisible(), true);
   const after = await checkpoint(target);
-  const first = before.game.rooms[0].sessions[0].player;
-  const current = after.game.rooms[0].sessions[0].player;
+  const first = savedMembers(before.game)[0].player;
+  const current = savedMembers(after.game)[0].player;
   assert.equal(current.id, first.id);
   assert.deepEqual(current.inventory, first.inventory);
   assert.equal(current.mascot, first.mascot);
@@ -188,8 +189,8 @@ async function recoverContext(target) {
   await target.locator('#context-recovery').waitFor({ state: 'detached', timeout: 60000 });
   assert.equal(await target.locator('#world').getAttribute('data-webgl-context'), 'restored');
   assert.equal(
-    (await checkpoint(target)).game.rooms[0].sessions[0].player.id,
-    before.game.rooms[0].sessions[0].player.id,
+    savedMembers((await checkpoint(target)).game)[0].player.id,
+    savedMembers(before.game)[0].player.id,
   );
   await target.screenshot({ path: `${output}/context-restored.png` });
   pass('A real WebGL context loss restores the scene without losing the solo session');
@@ -238,7 +239,7 @@ async function touchMovement(target) {
     await target.locator('#modal[open]').waitFor();
     await target.locator('[data-controller-menu="title"]').tap();
     await target.locator('#screen-title').waitFor();
-    const saved = (await checkpoint(target)).game.rooms[0].sessions[0].player;
+    const saved = savedMembers((await checkpoint(target)).game)[0].player;
     assert.ok(Math.hypot(saved.x - before.x, saved.z - before.z) > 0.2);
     pass(
       'Native Chrome touch moves, cancellation stops, jump works, and the menu saves the moved position',
@@ -267,8 +268,8 @@ try {
   const first = await checkpoint(page);
   assert.equal(first.game.rooms.length, 1);
   assert.equal(first.game.rooms[0].name, 'SOLO');
-  assert.equal(first.game.rooms[0].sessions.length, 1);
-  const original = first.game.rooms[0].sessions[0].player;
+  assert.equal(savedMembers(first.game).length, 1);
+  const original = savedMembers(first.game)[0].player;
   assert.equal(original.character, 'cro-magnon-hunter');
   assert.equal(original.dye, 'blue');
   assert.equal(original.mascot, '524');
@@ -292,12 +293,12 @@ try {
   await page.locator('[data-controller-menu="title"]').click();
   await page.waitForTimeout(350);
   const saved = await checkpoint(page);
-  const moved = saved.game.rooms[0].sessions[0].player;
+  const moved = savedMembers(saved.game)[0].player;
   assert.ok(Math.hypot(moved.x - original.x, moved.z - original.z) > 0.2);
   await page.reload();
   await setup(page, 'cro-magnon-girl-bear', 'teal');
   const resumed = await checkpoint(page);
-  const restored = resumed.game.rooms[0].sessions[0].player;
+  const restored = savedMembers(resumed.game)[0].player;
   assert.equal(restored.id, original.id);
   assert.deepEqual(restored.inventory, moved.inventory);
   assert.ok(Math.hypot(restored.x - moved.x, restored.z - moved.z) < 0.1);
@@ -315,11 +316,11 @@ try {
   await second.locator('#loading-cave[data-world-ready="true"]').waitFor({ timeout: 180000 });
   await second.locator('[data-cave-proceed]').click();
   await second.locator('#setup-error').filter({ hasText: '別のタブでソロプレイ中です' }).waitFor();
-  assert.equal((await checkpoint(second)).game.rooms[0].sessions[0].player.id, original.id);
+  assert.equal(savedMembers((await checkpoint(second)).game)[0].player.id, original.id);
   await title(page);
   await second.reload();
   await setup(second);
-  assert.equal((await checkpoint(second)).game.rooms[0].sessions[0].player.id, original.id);
+  assert.equal(savedMembers((await checkpoint(second)).game)[0].player.id, original.id);
   pass('A second tab cannot overwrite a live game and can resume after the first returns to title');
   await title(second);
   await context.close();
@@ -352,7 +353,7 @@ try {
   await page.locator('[data-starting-mascot="blue"]').tap();
   await page.locator('#mascot-start').tap();
   await enterPreparedWorld(page, true);
-  assert.equal((await checkpoint(page)).game.rooms[0].sessions[0].player.mascot, 'blue');
+  assert.equal(savedMembers((await checkpoint(page)).game)[0].player.mascot, 'blue');
   await page.screenshot({ path: `${output}/solo-mobile.png` });
   if (process.argv.includes('--profile')) await profileFrames(page, 'mobile-emulation');
   pass(

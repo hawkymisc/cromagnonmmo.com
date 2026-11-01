@@ -203,6 +203,7 @@ test('the game module performs the handed-off action once and keeps an open dial
       screens: { show: (id) => calls.push(['show', id]) },
       showTitle: () => calls.push('title'),
       showSetup: () => calls.push('setup'),
+      takeSetupRequest: () => false,
       ...extra,
     });
     return calls;
@@ -211,4 +212,10 @@ test('the game module performs the handed-off action once and keeps an open dial
   assert.deepEqual(run({ intent: null, contributorsOpen: false }), ['title']);
   assert.deepEqual(run({ intent: 'start', contributorsOpen: false }), ['title', 'setup']);
   assert.deepEqual(run({ intent: null, contributorsOpen: true }), [['show', 'title']]);
+  // A title opened by the other kind of play (?setup=1) goes straight to setup, once.
+  assert.deepEqual(run(null, { takeSetupRequest: () => true }), ['title', 'setup']);
+  assert.deepEqual(
+    run({ intent: 'start', contributorsOpen: false }, { takeSetupRequest: () => true }),
+    ['title', 'setup'],
+  );
 });

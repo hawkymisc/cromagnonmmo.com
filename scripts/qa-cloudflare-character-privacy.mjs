@@ -10,6 +10,7 @@ import {
 } from '../dist-cloudflare-worker/shared/characters.mjs';
 import { createGameCore } from '../dist-cloudflare-worker/application/game-core.mjs';
 import { assertPublicCharacterData } from './public-character-audit.mjs';
+import { savedMembers } from '../dist-cloudflare-worker/application/save-format.mjs';
 
 const excludedKeys = new Set(['maruimo-octopus']),
   excludedSpecies = new Set(['maruimo']);
@@ -75,8 +76,8 @@ const welcome = first.messages.find((message) => message.type === 'welcome');
 assert.equal(welcome.profile.species, 'cro');
 check('messages.json', JSON.stringify(first.messages));
 const saved = JSON.parse(JSON.stringify(core.exportState()));
-saved.rooms[0].sessions[0].player.species = 'maruimo';
-saved.rooms[0].sessions[0].player.inventory.wood = 11;
+savedMembers(saved)[0].player.species = 'maruimo';
+savedMembers(saved)[0].player.inventory.wood = 11;
 const restored = createGameCore({ resumeGraceMs: 86400000, keepEmptyRooms: true });
 restored.importState(saved);
 const resumed = new Socket();

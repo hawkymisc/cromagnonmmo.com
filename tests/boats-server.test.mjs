@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createGameCore } from '../dist/application/game-core.mjs';
 import { createGameServer } from '../server.mjs';
 import { updateBoats } from '../dist/shared/boats.mjs';
+import { savedSessions } from './helpers/save-format.mjs';
 class Socket {
   readyState = 1;
   bufferedAmount = 0;
@@ -197,7 +198,7 @@ test('carried and recovered boats survive durable restore and legacy saves norma
     assert.equal(player.inventory.boat, 2);
     assert.equal(player.inventory.wood, 0);
     assert.equal(restored.rooms.get('BOAT-QA').boats.length, 0);
-    for (const session of saved.rooms[0].sessions) delete session.player.inventory.boat;
+    for (const session of savedSessions(saved)) delete session.player.inventory.boat;
     legacy = createGameCore({ keepEmptyRooms: true });
     legacy.importState(saved);
     const previous = new Socket();

@@ -145,7 +145,7 @@ test('gathering applies the axe bonus only when that slot is selected', () => {
   const act = createActionHandler({
     notice() {},
     broadcast() {},
-    snapshot() {},
+    markDirty() {},
     systemChat() {},
     runtime: { now: () => 10000 },
   });

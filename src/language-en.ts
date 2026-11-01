@@ -901,6 +901,40 @@ export const ENGLISH_GAME: Readonly<Record<string, string>> = {
   'リンクを選択しました。Ctrl+C でコピーできます。': 'Link selected. Press Ctrl+C to copy.',
   'このPCと同じWi-Fi・LANにいる仲間が参加できます。インターネット越しの参加には、サーバーの公開が必要です。':
     'Friends on the same Wi-Fi or LAN can join. Joining over the internet requires a public server.',
+  // Playing together on a LAN host (docs/lan-play.md).
+  'スマートフォンのカメラで読み取ると、この部屋に参加できます。':
+    'Scan with a phone camera to join this room.',
+  招待リンクのQRコード: 'QR code of the invitation link',
+  'このPCのネットワークのアドレスが見つかりません。Wi-FiかLANにつないでから、もう一度開いてください。':
+    'No network address was found for this PC. Connect it to Wi-Fi or a LAN, then open this again.',
+  ソロのキャラクターを連れていく: 'Bring your solo character',
+  '持ち物・道具・探索の記録を、この部屋のあなたに写します。ソロの保存はそのまま残ります。この部屋にすでにあなたがいるときは使いません。':
+    'Copies your belongings, tools and exploration into this room. Your solo save stays as it is. Not used if you are already in this room.',
+  'このブラウザーのソロのキャラクター（{name}・{date}）':
+    'The solo character in this browser ({name} · {date})',
+  書き出したファイルから選ぶ: 'Choose an exported file',
+  '「{name}」の持ち物と探索の記録を連れていきます。':
+    '{name}’s belongings and exploration will come along.',
+  'このファイルは読み込めません。ゲームの設定の「キャラクターを書き出す」で作ったファイルを選んでください。':
+    'This file cannot be read. Choose a file made with “Export character” in the game settings.',
+  '「{name}」の持ち物と探索の記録を連れてきました。':
+    '{name}’s belongings and exploration came along.',
+  'この部屋にはすでにあなたの人物がいるので、ソロのキャラクターは連れてきませんでした。':
+    'You are already in this room, so your solo character did not come along.',
+  'この部屋はソロのキャラクターの持ち込みを受け付けていません。':
+    'This room does not accept solo characters.',
+  キャラクターを書き出す: 'Export character',
+  '持ち物と探索の記録をファイルに保存します。仲間のPCで開いたLANの部屋に連れていけます。':
+    'Saves your belongings and exploration to a file, to bring into a LAN room on a friend’s PC.',
+  書き出す: 'Export',
+  'キャラクターを書き出しました。LANの部屋の参加画面で選ぶと連れていけます。':
+    'Character exported. Choose it on a LAN room’s join screen to bring it along.',
+  'ゲームの版がサーバーと違います。ページを再読み込みしてください。':
+    'This game version differs from the server. Please reload the page.',
+  '接続の準備が終わりませんでした。もう一度参加してください。':
+    'The connection could not be prepared. Please join again.',
+  'この人物は別の部屋（{name}）で遊んでいます。そちらを閉じてから参加してください。':
+    'This character is playing in another room ({name}). Close that one, then join.',
   '氷河時代の大陸が広がる3Dワールド。左スティックを浅く倒すと歩き、深く倒すと走ります。右スティックでカメラ回転。':
     'An Ice Age 3D world. Push the left stick gently to walk, farther to run. Use the right stick to look.',
   '氷河時代の大陸が広がる3Dワールド。WASDまたは左スティックで移動。左スティックを浅く倒すと歩き、深く倒すと走ります。右スティックまたはドラッグでカメラ回転。':

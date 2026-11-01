@@ -13,6 +13,7 @@ import {
   mascotKeyOf,
 } from '../dist/shared/mascot-selection.mjs';
 import { damageableTargets } from '../dist/shared/combat.mjs';
+import { legacySave } from './helpers/save-format.mjs';
 
 class Socket extends EventEmitter {
   readyState = 1;
@@ -350,7 +351,8 @@ test('saves from shared camp companions give each owner one, in card order', () 
     e = w.join('E', '', { x: 66, z: 50 });
   w.act(e, 'selectMascot', 'white');
   w.act(e, 'deselectMascot');
-  const saved = w.core().exportState();
+  // Shared camp companions belong to the version 1 layout, which kept players in rooms.
+  const saved = legacySave(w.core().exportState());
   const record = saved.rooms[0];
   record.rimoNeko = { followPlayerId: a.id, x: 1, z: 2 };
   record.companion524 = { squadPlayerId: b.id };

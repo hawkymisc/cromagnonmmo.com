@@ -4,7 +4,7 @@
 
 ## 日本語
 
-クロマニョン人の時代をローポリで描いた、ブラウザーで遊べる3Dゲームです。約5万年前の大陸を近似した世界で、草原・雪原・氷床・火山・砂漠を歩き、採集・調理・マンモス狩りをしながら、仲間のマスコットと旅をします。現在はソロプレイ専用で、進行はブラウザーに自動保存されます。
+クロマニョン人の時代をローポリで描いた、ブラウザーで遊べる3Dゲームです。約5万年前の大陸を近似した世界で、草原・雪原・氷床・火山・砂漠を歩き、採集・調理・マンモス狩りをしながら、仲間のマスコットと旅をします。公開サイトはソロプレイで、進行はブラウザーに自動保存されます。手元のPCをホストにすると、同じWi-Fi・LANの仲間と同じ谷で遊べます（[家やLANでみんなで遊ぶ](docs/lan-play.md)）。
 
 **遊ぶ：[cromagnonmmo.com](https://cromagnonmmo.com/)**（[English](https://cromagnonmmo.com/en/)）
 
@@ -54,6 +54,7 @@
 - 人物14人と、524・りもねこ・Dots全9種類の仲間から選べます。
 - PC（キーボード・マウス、ゲームパッド）と、スマートフォンの縦持ちに対応しています。
 - ソロの進行はブラウザーのWorker内で処理し、IndexedDBに保存します。アカウントは要りません。
+- 手元のPCをホストにして、同じLANの仲間と同じ部屋で遊べます（最大8人、ホストのPCに自動保存）。
 
 ### 手元で動かす
 
@@ -66,7 +67,15 @@ pnpm start
 
 ブラウザーで http://localhost:3000 を開きます。初回の `pnpm start` は、3Dモデルを配信用に変換するので数分かかります。開発中は `pnpm start` の代わりに `pnpm run dev` を使うと、TypeScriptとCSSの変更を監視して作り直します。
 
-サーバーは、このPC（127.0.0.1）からの接続だけを受け付けます。同じネットワークのスマートフォンなどから開くときは、環境変数 `HOST=0.0.0.0` を付けて起動します（PowerShellでは `$env:HOST='0.0.0.0'; pnpm run dev`）。ポートは環境変数 `PORT` で変えられます（既定は3000）。手元で動かすのに、APIキーなどの秘密の設定は要りません（`.env` のファイルもありません）。
+### みんなで遊ぶ（LAN）
+
+同じWi-Fi・LANにいる仲間と一緒に遊ぶときは、ホストのPCで次を実行し、表示されたアドレスかゲーム内のQRコードからほかの機器で参加します。ソロのキャラクターを連れていくこともできます。手順と設定は [家やLANでみんなで遊ぶ](docs/lan-play.md) にまとめています。
+
+```bash
+pnpm run start:lan
+```
+
+`pnpm start` のサーバーは、このPC（127.0.0.1）からの接続だけを受け付けます。同じネットワークのスマートフォンなどから画面の表示を確かめるときは、環境変数 `HOST=0.0.0.0` を付けて起動します（PowerShellでは `$env:HOST='0.0.0.0'; pnpm run dev`）。ソロの保存はブラウザーが `https` とそのPC自身にだけ許す機能を使うので、LANのアドレスから開いた画面ではソロを始められません。ポートは環境変数 `PORT` で変えられます（既定は3000）。手元で動かすのに、APIキーなどの秘密の設定は要りません（`.env` のファイルもありません）。
 
 テストと、型・構文・依存の境界の検査、書式の確認：
 
@@ -95,13 +104,14 @@ pnpm run format:check
 | `assets/`         | 公開用のビルドとテストが読む採用の記録                       |
 | `scripts/`        | ビルド・検証・制作のスクリプト                               |
 | `tests/`          | 自動テスト（`node:test`）                                    |
-| `docs/` | ゲーム仕様・開発手順・構成説明 |
+| `docs/` | ゲーム仕様・開発手順・構成説明・LANで遊ぶ手順 |
 
 ### 文書
 
 文書の多くは日本語で書いています。
 
 - [ゲームの仕様と操作](docs/game-spec.md)
+- [家やLANでみんなで遊ぶ](docs/lan-play.md)
 - [公開と主な変更のお知らせ](docs/releases.md)
 - [文書の索引](docs/README.md)
 - [コードの構成と依存の境界](docs/ARCHITECTURE.md)
@@ -119,7 +129,7 @@ pnpm run format:check
 
 ## English
 
-A low-poly 3D game set in the age of the Cro-Magnons that you play in the browser. In a world that approximates the continents of about 50,000 years ago, you walk through grasslands, snowfields, ice sheets, volcanoes and deserts, gathering, cooking and hunting mammoths as you travel with mascot companions. For now it is solo only, and your progress is saved automatically in your browser.
+A low-poly 3D game set in the age of the Cro-Magnons that you play in the browser. In a world that approximates the continents of about 50,000 years ago, you walk through grasslands, snowfields, ice sheets, volcanoes and deserts, gathering, cooking and hunting mammoths as you travel with mascot companions. The public site is solo play, and your progress is saved automatically in your browser. With your own PC as the host, friends on the same Wi-Fi or LAN can share the valley with you ([Playing together at home or on a LAN](docs/lan-play.md), in Japanese).
 
 **Play: [cromagnonmmo.com](https://cromagnonmmo.com/en/)** ([日本語](https://cromagnonmmo.com/))
 
@@ -169,6 +179,7 @@ Pull requests that fix bugs or improve things are welcome too.
 - Choose from 14 characters, and from the companions 524, Rimo-neko and all nine Dots.
 - Plays on PC (keyboard and mouse, or a gamepad) and on smartphones held upright.
 - Solo play runs in a Worker in your browser and is saved to IndexedDB. No account is needed.
+- With your own PC as the host, up to 8 people on the same LAN share a room, saved on the host.
 
 ### Running it locally
 
@@ -181,7 +192,15 @@ pnpm start
 
 Open http://localhost:3000 in your browser. The first `pnpm start` takes a few minutes because it converts the 3D models for delivery. While developing, use `pnpm run dev` instead of `pnpm start` to watch TypeScript and CSS changes and rebuild.
 
-The server accepts connections only from this PC (127.0.0.1). To open it from a smartphone or another device on the same network, start it with the environment variable `HOST=0.0.0.0` (in PowerShell: `$env:HOST='0.0.0.0'; pnpm run dev`). The environment variable `PORT` changes the port (3000 by default). Running it locally needs no API keys or other secrets (and there is no `.env` file).
+### Playing together (LAN)
+
+To play with friends on the same Wi-Fi or LAN, run this on the host PC, then join from the other devices with the address it prints or the QR code in the game's invitation. A solo character can come along. Steps and settings are in [Playing together at home or on a LAN](docs/lan-play.md) (in Japanese).
+
+```bash
+pnpm run start:lan
+```
+
+The `pnpm start` server accepts connections only from this PC (127.0.0.1). To check the screens from a smartphone or another device on the same network, start it with the environment variable `HOST=0.0.0.0` (in PowerShell: `$env:HOST='0.0.0.0'; pnpm run dev`). Solo saving uses browser features granted only to `https` and to the PC itself, so a page opened at a LAN address cannot start solo play. The environment variable `PORT` changes the port (3000 by default). Running it locally needs no API keys or other secrets (and there is no `.env` file).
 
 Tests, the type, syntax and dependency-boundary checks, and the format check:
 
@@ -210,13 +229,14 @@ Runtime models, images and audio are in `public/`; build and test inputs are in 
 | `assets/`         | Adoption records that the public build and the tests read                             |
 | `scripts/`        | Build, verification and production scripts                                            |
 | `tests/`          | Automated tests (`node:test`)                                                         |
-| `docs/` | Game specifications, development and architecture |
+| `docs/` | Game specifications, development, architecture and LAN play |
 
 ### Documents
 
 Most documents are written in Japanese.
 
 - [Game specification and controls](docs/game-spec.md)
+- [Playing together at home or on a LAN](docs/lan-play.md)
 - [Release notes](docs/releases.md)
 - [Document index](docs/README.md)
 - [Code structure and dependency boundaries](docs/ARCHITECTURE.md)

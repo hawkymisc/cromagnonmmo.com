@@ -25,6 +25,7 @@ import { waterBodyFree } from '../dist/shared/boats.mjs';
 import { verifyModelSource, assertSameGeometry } from './runtime-model-identity.mjs';
 import { deepenedZ } from './cave-deepening.mjs';
 import { productionFiles } from './helpers/production-files.mjs';
+import { savedSessions } from './helpers/save-format.mjs';
 
 const R04_ADOPTION = 'assets/runtime-adoption/20261009-r04-a01';
 
@@ -254,8 +255,8 @@ test('old mountain-area saves retain boats and move the giant beast to its curre
         mooring: { x: 21, z: 129 },
       },
     ];
-    record.sessions[0].player.boatId = 'boat-old';
-    record.sessions[0].player.inventory.wood = 17;
+    savedSessions(saved)[0].player.boatId = 'boat-old';
+    savedSessions(saved)[0].player.inventory.wood = 17;
     restored.importState(saved);
     const room = restored.rooms.get('LAND-MIGRATION'),
       boat = room.boats[0];

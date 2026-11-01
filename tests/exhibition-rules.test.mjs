@@ -61,8 +61,18 @@ test('partial room rules fall back to the ordinary game', () => {
 test('an exhibition visitor always runs, 1.4 times faster, and the client is told so', () => {
   const floor = join(true),
     plain = join(false);
-  assert.deepEqual(floor.welcome.rules, { alwaysRun: true, speedScale: 1.4, spawnChoice: true });
-  assert.deepEqual(plain.welcome.rules, { alwaysRun: false, speedScale: 1, spawnChoice: false });
+  assert.deepEqual(floor.welcome.rules, {
+    alwaysRun: true,
+    speedScale: 1.4,
+    spawnChoice: true,
+    idleTimeoutMs: 30000,
+  });
+  assert.deepEqual(plain.welcome.rules, {
+    alwaysRun: false,
+    speedScale: 1,
+    spawnChoice: false,
+    idleTimeoutMs: 30000,
+  });
   for (const session of [floor, plain]) {
     session.socket.command({ type: 'move', dx: 0, dz: 1, running: false });
     session.advance(50);

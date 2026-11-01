@@ -1,6 +1,7 @@
 import { DurableObject } from 'cloudflare:workers';
 import { createGameCore } from '../application/game-core.mjs';
 import { WORLD } from '../shared/world.mjs';
+import { SAVE_VERSION } from '../application/save-format.mjs';
 import { GameSocket } from './socket-adapter.mjs';
 import { freshBudget, reserve, utcDay, nextDay } from './free-budget.mjs';
 
@@ -49,7 +50,7 @@ export class FreeGameRoom extends DurableObject<Env> {
       this.budget = saved?.budget || freshBudget();
       if (saved?.game) {
         this.game.importState(saved.game);
-        if (saved.game.worldVersion !== WORLD.version) {
+        if (saved.game.worldVersion !== WORLD.version || saved.game.version !== SAVE_VERSION) {
           // Keep the exact prior cloud checkpoint before the first upgraded save.
           ctx.storage.sql.exec(
             'CREATE TABLE IF NOT EXISTS checkpoint_backup (id INTEGER PRIMARY KEY CHECK (id = 1), data TEXT NOT NULL)',

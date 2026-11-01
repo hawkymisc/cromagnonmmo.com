@@ -1,10 +1,19 @@
+import { saveVersionNewer, saveVersionReadable } from '../../application/save-format.mjs';
+
 /** Browser-only checkpoints. No network or server storage is involved. */
 export const SOLO_DATABASE = 'cro-magnon-solo';
 export const SOLO_STORE = 'checkpoints';
 export class UnsupportedSoloSave extends Error {}
 export interface SoloData {
   session: string;
-  game: { version: number; worldVersion: number; rooms: unknown[]; savedAt: number };
+  game: {
+    version: number;
+    worldVersion: number;
+    rooms: unknown[];
+    /** Version 2: each player once, beside the rooms (application/save-format.mts). */
+    players?: unknown[];
+    savedAt: number;
+  };
 }
 interface RecordEnvelope {
   version: 1;
@@ -35,14 +44,16 @@ export async function decodeSoloSave(value: unknown): Promise<SoloData> {
   )
     throw new Error('Invalid solo checkpoint');
   const data = JSON.parse(record.payload) as SoloData;
-  if (data?.game?.version > 1) throw new UnsupportedSoloSave('Newer solo world format');
+  if (saveVersionNewer(data?.game?.version))
+    throw new UnsupportedSoloSave('Newer solo world format');
   if (
     !data ||
     typeof data.session !== 'string' ||
     !data.game ||
-    data.game.version !== 1 ||
+    !saveVersionReadable(data.game.version) ||
     !Array.isArray(data.game.rooms) ||
-    data.game.rooms.length > 1
+    data.game.rooms.length > 1 ||
+    (data.game.version >= 2 && !Array.isArray(data.game.players))
   )
     throw new Error('Invalid solo world');
   return data;

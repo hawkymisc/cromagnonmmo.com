@@ -1,7 +1,24 @@
 import type { BarterCommand } from '../shared/barter-types.mjs';
 import { validMapPinPoint } from '../shared/map-pins.mjs';
+
+export { PROTOCOL_VERSION } from '../shared/protocol-version.mjs';
+/** In-game commands are small; only the opening `hello` may carry a character record. */
+export const MAX_COMMAND_BYTES = 2048;
+export const MAX_HELLO_BYTES = 16384;
+
+export interface HelloCommand {
+  type: 'hello';
+  protocolVersion: number;
+  session?: string;
+  /** The browser's public key (SPKI, base64url): application/identity.mts. */
+  identity?: string;
+  /** A record from this person's own solo save, offered when the handshake accepts one. */
+  carry?: unknown;
+}
+
 export type ClientCommand =
   | BarterCommand
+  | HelloCommand
   | { type: 'activity' }
   | { type: 'leave'; keepSession?: boolean }
   | { type: 'move'; dx: number; dz: number; running?: boolean; facing?: number }
@@ -31,6 +48,18 @@ export function decodeCommand(text: string): ClientCommand | null {
     case 'activity':
       // The server's receive clock owns the deadline, never a client timestamp.
       return { type: 'activity' };
+    case 'hello': {
+      const text = (v: unknown, max: number): v is string =>
+        typeof v === 'string' && v.length > 0 && v.length <= max;
+      if (!Number.isSafeInteger(message.protocolVersion)) return null;
+      return {
+        type: 'hello',
+        protocolVersion: message.protocolVersion as number,
+        ...(text(message.session, 256) ? { session: message.session } : {}),
+        ...(text(message.identity, 1024) ? { identity: message.identity } : {}),
+        ...(message.carry && typeof message.carry === 'object' ? { carry: message.carry } : {}),
+      };
+    }
     case 'mapPin':
       return validMapPinPoint(message.x, message.z)
         ? { type: 'mapPin', x: message.x as number, z: message.z as number }

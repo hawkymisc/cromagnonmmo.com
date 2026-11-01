@@ -11,6 +11,7 @@ import {
 } from '../dist/shared/player-inactivity.mjs';
 import { translateText, registerTranslations } from '../dist/src/language.js';
 import { ENGLISH_GAME } from '../dist/src/language-en.js';
+import { savedSessions } from './helpers/save-format.mjs';
 
 class Socket extends EventEmitter {
   readyState = 1;
@@ -144,7 +145,7 @@ test('idle exit preserves the same traveller, belongings and companion choice ac
   assert.equal(client.player.cookingEndsAt, 0);
   assert.equal(client.player.pendingStrike, null);
   const saved = f.core.exportState();
-  assert.equal(saved.rooms[0].sessions[0].player.lastActivityAt, undefined);
+  assert.equal(savedSessions(saved)[0].player.lastActivityAt, undefined);
   const restored = createGameCore({ runtime: f.runtime, keepEmptyRooms: true });
   restored.importState(saved);
   const socket = new Socket();

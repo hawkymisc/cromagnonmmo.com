@@ -12,6 +12,7 @@ import {
   multiplayerUrl,
 } from '../dist/src/multiplayer-config.js';
 import edge from '../dist/cloudflare/request-handler.mjs';
+import { savedSessions } from './helpers/save-format.mjs';
 
 const profile = {
   name: 'Solo test',
@@ -65,7 +66,7 @@ test('solo commits its first world before entry, and refuses entry if saving fai
       await runtime.start(profile);
       assert.equal(messages(output).find((m) => m.type === 'welcome').room, 'SOLO');
       assert.equal(save.data.game.rooms.length, 1);
-      assert.equal(save.data.game.rooms[0].sessions.length, 1);
+      assert.equal(savedSessions(save.data.game).length, 1);
     }
     save.fail = false;
     await runtime.close();
@@ -79,7 +80,7 @@ test('a fresh solo runtime restores inventory, progress, location and companion,
   await first.close();
   // Arrange a genuine exported checkpoint with earned progress, without a live mutation hook.
   const room = save.data.game.rooms[0],
-    player = room.sessions[0].player;
+    player = savedSessions(save.data.game)[0].player;
   player.inventory.wood = 9;
   player.gathered = 11;
   room.camp.wood = 18;
@@ -95,7 +96,7 @@ test('a fresh solo runtime restores inventory, progress, location and companion,
     mascot: 'keep',
   });
   const restored = save.data.game.rooms[0],
-    me = restored.sessions[0].player;
+    me = savedSessions(save.data.game)[0].player;
   assert.equal(me.id, player.id);
   assert.deepEqual(me.inventory, player.inventory);
   assert.equal(me.gathered, 11);
@@ -107,7 +108,7 @@ test('a fresh solo runtime restores inventory, progress, location and companion,
   assert.equal(me.mascot, '524');
   assert.equal(messages(outputs).find((m) => m.type === 'welcome').resumed, true);
   assert.deepEqual(
-    previous.game.rooms[0].sessions[0].player,
+    savedSessions(previous.game)[0].player,
     player,
     'restore never mutates its input',
   );
@@ -147,12 +148,12 @@ for (const resumed of [false, true])
           .at(-1);
         assert.ok(state.players.some((player) => player.id === welcome.id));
         assert.ok(save.writes > writes, 'autosave continues without input');
-        assert.equal(save.data.game.rooms[0].sessions[0].player.id, welcome.id);
+        assert.equal(savedSessions(save.data.game)[0].player.id, welcome.id);
       }
       await runtime.command(
         JSON.stringify({ type: 'action', action: 'dyeClothes', targetId: 'teal' }),
       );
-      const player = save.data.game.rooms[0].sessions[0].player;
+      const player = savedSessions(save.data.game)[0].player;
       assert.equal(player.dye, 'teal', 'input still works after the idle period');
       assert.equal(player.mascot, profile.mascot);
     } finally {
@@ -185,7 +186,7 @@ test('autosave failures preserve the committed state, report the error and avoid
   assert.deepEqual(save.data, committed);
   save.fail = false;
   await runtime.save();
-  assert.equal(save.data.game.rooms[0].sessions[0].player.dye, 'teal');
+  assert.equal(savedSessions(save.data.game)[0].player.dye, 'teal');
   assert.equal(
     messages(outputs)
       .filter((m) => m.type === 'saveStatus')
@@ -239,11 +240,8 @@ test('manual solo exit retains the live game after a failed save and commits bef
   );
   commit();
   assert.equal(await leaving, true);
-  assert.equal(save.data.game.rooms[0].sessions[0].player.dye, 'teal');
-  assert.equal(
-    save.data.game.rooms[0].sessions[0].player.id,
-    before.game.rooms[0].sessions[0].player.id,
-  );
+  assert.equal(savedSessions(save.data.game)[0].player.dye, 'teal');
+  assert.equal(savedSessions(save.data.game)[0].player.id, savedSessions(before.game)[0].player.id);
   assert.equal(storageClosed, true);
   assert.equal(outputs.at(-1).type, 'closed');
 });
@@ -277,8 +275,15 @@ test('solo envelopes detect tampering and reject newer payload versions', async 
   );
   await assert.rejects(decodeSoloSave({ ...record, version: 2 }), UnsupportedSoloSave);
   await assert.rejects(
-    decodeSoloSave(await encodeSoloSave({ ...data, game: { ...data.game, version: 2 } }, 2)),
+    decodeSoloSave(await encodeSoloSave({ ...data, game: { ...data.game, version: 3 } }, 2)),
     UnsupportedSoloSave,
+  );
+  // The current layout keeps each player beside the rooms; it must name that list.
+  const current = { session: 'a', game: { ...data.game, version: 2, players: [] } };
+  assert.deepEqual(await decodeSoloSave(await encodeSoloSave(current, 3)), current);
+  await assert.rejects(
+    decodeSoloSave(await encodeSoloSave({ ...data, game: { ...data.game, version: 2 } }, 4)),
+    /Invalid solo world/,
   );
 });
 

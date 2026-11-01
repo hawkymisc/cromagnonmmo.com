@@ -19,6 +19,14 @@ Dependencies point toward the domain. `scripts/check-architecture.mjs` checks im
 
 `createGameServer({ core })` permits an already-created/restored application core to be hosted by Node. The default still creates a fresh in-memory core. This injection does **not** add automatic disk persistence. The restoration integration test uses the application's existing save format and reconnect tokens.
 
+Saves use layout version 2 (`application/save-format.mts`): each player's progress once at the top level, and each room keeps only its members (resume token, expiry, player id). Version 1 saves, which nested players in rooms, are still read and upgraded. Player progress refers only to the shared world catalogue, so the same record can enter any room of a host.
+
+A browser is one person on a host. Its identity key (`src/net/identity.ts`: an ECDSA public key in secure contexts, a random 32-byte secret on plain-http LAN pages) is hashed by `application/identity.mts` into the player id. Protocol 2 (`shared/protocol-version.mts`) opens the WebSocket with `hello=1`; the host sends `handshake`, and the browser answers with `hello` carrying the resume token, the identity key and, where the room accepts one, a character from the player's solo save (`application/carried-profile.mts` rebuilds it field by field). Protocol 1, with the token in the URL, is still accepted. A LAN host does not challenge the key; a public host must add a signed challenge first (`docs/multiplayer-plan.md`, Phase 2).
+
+State frames are assembled in one place. Commands and simulation call `markDirty(room, world)`; `flushState` sends one frame after each handled command and once per tick. The browser applies frames through `src/net/state-store.ts`, which accepts full frames and per-entity `delta` frames, so the host can later send only what changed or what is near.
+
+`RoomRules` carry the idle limit, the room's player limit (never above the host's) and whether carried characters are accepted. `HOME_RULES` is the LAN preset served by `pnpm run start:lan` (`infrastructure/node/lan-settings.mts`, `docs/lan-play.md`).
+
 Public snapshots have a shared schema separate from private session data. Browser session storage has a small storage interface and keeps the existing memory fallback when browser storage is denied. The Cloudflare socket adapter queues responses until the Worker explicitly flushes them after a successful save.
 
 ## Commands
@@ -28,6 +36,8 @@ pnpm install
 pnpm run build
 pnpm start
 pnpm run dev
+pnpm run start:lan
+pnpm run dev:lan
 pnpm test
 pnpm run check
 pnpm run format:check

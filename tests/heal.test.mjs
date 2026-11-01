@@ -8,7 +8,7 @@ test('removed auto-heal action does not eat; explicit inventory food actions sti
   const act = createActionHandler({
     notice: (player, text, tone) => notices.push({ text, tone }),
     broadcast: () => {},
-    snapshot: () => ({}),
+    markDirty: () => {},
     systemChat: () => {},
     runtime: { now: () => 5000 },
   });

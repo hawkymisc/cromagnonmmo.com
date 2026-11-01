@@ -17,6 +17,7 @@ import {
 import { MASCOT_PORTRAITS } from '../dist/src/mascot-portraits.js';
 import { mascotPictureMarkup } from '../dist/src/mascot-menu.js';
 import { sha256, buildId, verifyExhibition } from '../scripts/exhibition-integrity.mjs';
+import { savedSessions } from './helpers/save-format.mjs';
 
 test('released companions use their current photographs without source portrait URLs', async () => {
   const { assets } = JSON.parse(await readFile('public/models/world-assets.json', 'utf8'));
@@ -341,7 +342,7 @@ test('local verification persistence resumes only its own world and leaves the l
     saveIntervalMs: 100000,
   });
   t.after(() => restored.close());
-  assert.equal(restored.core.exportState().rooms[0].sessions[0].player.inventory.wood, 17);
+  assert.equal(savedSessions(restored.core.exportState())[0].player.inventory.wood, 17);
   assert.equal(await readFile(legacy, 'utf8'), 'legacy user save sentinel');
 });
 

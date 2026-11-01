@@ -8,6 +8,7 @@ import {
   INTRO_MAX_LENGTH,
   playerProfile,
 } from '../dist/shared/player-profile.mjs';
+import { savedSessions } from './helpers/save-format.mjs';
 
 class Socket extends EventEmitter {
   readyState = 1;
@@ -112,7 +113,7 @@ test('an introduction is kept with the player across a restart, and cleaned when
   w.introduce(a, '洞窟の壁画を見に行こう');
   a.socket.close();
   const saved = w.restart();
-  const entry = saved.rooms[0].sessions.find((s) => s.player.id === a.id);
+  const entry = savedSessions(saved).find((s) => s.player.id === a.id);
   assert.equal(entry.player.intro, '洞窟の壁画を見に行こう');
   assert.ok(!('lastIntroAt' in entry.player));
   const back = w.join('A', a.session);
@@ -120,7 +121,7 @@ test('an introduction is kept with the player across a restart, and cleaned when
   assert.equal(w.intros(back).at(-1).intros[a.id], '洞窟の壁画を見に行こう');
   // A forged save cannot smuggle long or control text into a card.
   const forged = w.core().exportState();
-  forged.rooms[0].sessions[0].player.intro = `\u0007${'い'.repeat(200)}`;
+  savedSessions(forged)[0].player.intro = `\u0007${'い'.repeat(200)}`;
   const core = createGameCore({ persistentSessions: true });
   core.importState(forged);
   const restored = [...core.rooms.get('INTRO').sessions.values()][0].player.intro;

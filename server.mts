@@ -1,10 +1,13 @@
 import http from 'node:http';
-import { networkInterfaces } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mkdir, realpath } from 'node:fs/promises';
 import { WebSocketServer } from 'ws';
 import { createGameCore } from './application/game-core.mjs';
+import { expandSavedRooms, saveVersionReadable } from './application/save-format.mjs';
+import { MAX_HELLO_BYTES } from './application/protocol.mjs';
+import type { RoomRules } from './shared/room-rules.mjs';
+import { lanSettings, lanUrls } from './infrastructure/node/lan-settings.mjs';
 import { MIME, sendFailure, serveStatic } from './infrastructure/node/static-files.mjs';
 import {
   type DeliveryOverlay,
@@ -47,10 +50,18 @@ export function createGameServer({
   tickMs = 50,
   resumeGraceMs = 120000,
   exhibition = process.env.EXHIBITION_RULES === '1',
-  playerLimit = WORLD.maxPlayers,
+  playerLimit = WORLD.maxPlayers as number,
   visibility = ALL_CONTENT,
   mascotModels = ACTIVE_MASCOT_MODELS,
-  core = createGameCore({ resumeGraceMs, exhibition, playerLimit, visibility, mascotModels }),
+  rules = undefined as Partial<RoomRules> | undefined,
+  core = createGameCore({
+    resumeGraceMs,
+    exhibition,
+    playerLimit,
+    visibility,
+    mascotModels,
+    ...(rules ? { rules } : {}),
+  }),
   serveAssets = true,
   expectedBuild = '',
   allowedOrigins = [] as string[],
@@ -130,16 +141,7 @@ export function createGameServer({
               : {
                   port: activePort,
                   localUrl: `http://localhost:${activePort}`,
-                  urls: LOOPBACK.includes(host)
-                    ? []
-                    : [
-                        ...new Set(
-                          Object.values(networkInterfaces())
-                            .flat()
-                            .filter((item) => item && item.family === 'IPv4' && !item.internal)
-                            .map((item) => `http://${item.address}:${activePort}`),
-                        ),
-                      ],
+                  urls: LOOPBACK.includes(host) ? [] : lanUrls(activePort),
                 };
         response.writeHead(200, { 'Content-Type': MIME['.json'], 'Cache-Control': 'no-store' });
         response.end(request.method === 'HEAD' ? undefined : JSON.stringify(body));
@@ -152,7 +154,12 @@ export function createGameServer({
       sendFailure(response, error);
     }
   });
-  const wss = new WebSocketServer({ noServer: true, maxPayload: 2048, perMessageDeflate: false });
+  // The opening hello may carry a solo character; the core holds later commands to 2 KiB.
+  const wss = new WebSocketServer({
+    noServer: true,
+    maxPayload: MAX_HELLO_BYTES,
+    perMessageDeflate: false,
+  });
 
   server.on('upgrade', (request, socket, head) => {
     try {
@@ -286,25 +293,28 @@ export async function createPersistentGameServer({
       keepEmptyRooms: true,
       visibility: options.visibility,
       mascotModels: options.mascotModels,
+      ...(options.playerLimit ? { playerLimit: options.playerLimit } : {}),
+      ...(options.rules ? { rules: options.rules } : {}),
     });
   let core = makeCore();
   const store = await openLocalSave(canonical, (state: any) => {
     if (
       state &&
-      ((Number.isFinite(state.version) && state.version !== 1) ||
+      ((Number.isFinite(state.version) && !saveVersionReadable(state.version)) ||
         (Number.isFinite(state.worldVersion) && ![3, WORLD.version].includes(state.worldVersion)) ||
         state.rooms?.some?.((room) => room.gulf?.version > GULF.version))
     )
       throw new UnsupportedSaveError('Unsupported saved world version; original files retained');
     if (
       !state ||
-      state.version !== 1 ||
+      !saveVersionReadable(state.version) ||
       !Array.isArray(state.rooms) ||
       !Number.isFinite(state.savedAt)
     )
       throw new Error('Invalid saved world');
     const names = new Set();
-    for (const room of state.rooms) {
+    // Version 2 keeps players beside the rooms; check every room with its members attached.
+    for (const room of expandSavedRooms(state)) {
       if (
         !room ||
         typeof room.name !== 'string' ||
@@ -464,7 +474,9 @@ export async function startServer() {
       : null;
     if (profile && profile.id !== 'local')
       throw new Error('Use the exhibition or MMO release launcher.');
+    const lan = profile ? null : lanSettings(process.env);
     const game = await createPersistentGameServer({
+      ...(lan ?? {}),
       saveDirectory: process.env.CRO_SAVE_DIR || undefined,
       ...(profile
         ? localVerificationSettings(ROOT, process.env.CRO_LOCAL_VERIFY_PORT || profile.port)
@@ -479,6 +491,23 @@ export async function startServer() {
     });
     const { port } = await game.listen();
     console.log(`CRO-MAGNON running at http://localhost:${port} (local autosave every 10s)`);
+    if (lan) {
+      const urls = ['0.0.0.0', '::'].includes(lan.host)
+        ? lanUrls(port)
+        : [`http://${lan.host}:${port}`];
+      console.log(
+        [
+          `Shared play on this network: room ${lan.runtimeConfig.room}, up to ${lan.playerLimit} people.`,
+          ...(urls.length
+            ? [
+                'Open one of these on the other devices (same Wi-Fi or LAN):',
+                ...urls.map((url) => `  ${url}`),
+              ]
+            : ['No network address was found. Connect this PC to the Wi-Fi or LAN first.']),
+          'Anyone who can reach this PC can join. Use it only on a network you trust.',
+        ].join('\n'),
+      );
+    }
     let shuttingDown = false;
     const shutdown = () => {
       if (shuttingDown) return;
