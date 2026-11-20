@@ -33,6 +33,7 @@ const publicDocumentation = new Set([
   'lan-play.md',
   'meshmell-upload.md',
   'multiplayer-plan.md',
+  'performance-shared-room.md',
   'performance.md',
   'README.md',
   'releases.md',
