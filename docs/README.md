@@ -8,6 +8,7 @@
 - [アーキテクチャ](ARCHITECTURE.md)
 - [マルチプレイ化の設計レビューと計画](multiplayer-plan.md)
 - [性能の確認](performance.md)
+- [共有部屋を1人で遊ぶときの性能調査と改善候補](performance-shared-room.md)
 - [Cloudflareへのデプロイ](CLOUDFLARE_DEPLOYMENT.md)
 - [公開3Dモデル](meshmell-upload.md)
 
